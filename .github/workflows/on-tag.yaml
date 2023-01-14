@@ -23,10 +23,9 @@ jobs:
 
   image:
     outputs:
-      image_digest: ${{ steps.image.outputs.digest }}
-      image_uri: ${{ steps.image.outputs.uri }}
-      access_token: ${{ steps.token.outputs.access_token }}
-      hashes: ${{ steps.hash.outputs.hashes }}
+      digest: ${{ steps.image.outputs.digest }}
+      image: ${{ steps.image.outputs.image }}
+      token: ${{ steps.token.outputs.access_token }}
     runs-on: ubuntu-latest
     needs:
     - test
@@ -96,8 +95,10 @@ jobs:
       run: |
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
-        echo "uri=$(cat .digest | cut -d'@' -f 1)" >> "$GITHUB_OUTPUT"
-        echo "digest=$(cat .digest | cut -d'@' -f 2)" >> "$GITHUB_OUTPUT"
+        image=$(echo "${image_and_digest}" | cut -d':' -f1)
+        digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+        echo "image=$image" >> "$GITHUB_OUTPUT"
+        echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
@@ -125,15 +126,14 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
     secrets:
-      registry-password: ${{ needs.image.outputs.access_token }}
+      registry-password: ${{ needs.image.outputs.token }}
     with:
+      image: "${{ needs.image.outputs.image }}"
+      digest: "${{ needs.image.outputs.digest }}"
       registry-username: oauth2accesstoken
-      image: "${{ needs.image.outputs.image_uri }}"
-      digest: "${{ needs.image.outputs.image_digest }}"
       compile-generator: true
-      continue-on-error: true
 
   verify:
     needs:
