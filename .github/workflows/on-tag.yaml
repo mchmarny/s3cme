@@ -121,6 +121,7 @@ jobs:
     - image
     permissions:
       actions: read
+      id-token: write
       contents: write
       packages: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
