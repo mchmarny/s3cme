@@ -60,6 +60,10 @@ build: ## Publishes image directly using ko
 		ko build cmd/server/main.go --image-refs .digest --bare --tags $(VERSION),latest
 .PHONY: build
 
+.PHONY: setup
+setup: ## Applies Terraform
+	terraform -chdir=./setup apply -auto-approve
+
 clean: ## Cleans bin and temp directories
 	go clean
 	rm -fr ./vendor
