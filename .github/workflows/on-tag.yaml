@@ -95,8 +95,8 @@ jobs:
       run: |
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
-        image=$(echo "${image_and_digest}" | cut -d':' -f1)
-        digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+        image=$(cat .digest | cut -d'@' -f 1)
+        digest=$(cat .digest | cut -d'@' -f 2)
         echo "image=$image" >> "$GITHUB_OUTPUT"
         echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
