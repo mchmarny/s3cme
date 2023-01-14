@@ -12,7 +12,6 @@ import (
 func TestRootHandler(t *testing.T) {
 	s := &APIHandler{
 		Version: "1.0.0",
-		Commit:  "1234567890",
 	}
 
 	req, err := http.NewRequest(http.MethodGet, "/", nil)
@@ -29,7 +28,6 @@ func TestRootHandler(t *testing.T) {
 	err = json.NewDecoder(rr.Body).Decode(&c)
 	assert.NoError(t, err)
 	assert.Equal(t, s.Version, c.Version)
-	assert.Equal(t, s.Commit, c.Commit)
 	assert.NotEmpty(t, c.Message)
 	assert.NotEmpty(t, c.Timestamp)
 	assert.Empty(t, c.Error)

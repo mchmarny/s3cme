@@ -1,5 +1,4 @@
 VERSION    :=$(shell cat .version)
-COMMIT     :=$(shell git rev-parse HEAD)
 YAML_FILES :=$(shell find . -type f -regex ".*yaml" -print)
 
 all: help

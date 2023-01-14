@@ -80,10 +80,11 @@ jobs:
         echo "${auth_token}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
+      env:
+        KO_DOCKER_REPO: ${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }}
+        GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
       run: |
-        KO_DOCKER_REPO=${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }} \
-        GOFLAGS="-ldflags=-X=main.version=${{ env.RELEASE_VERSION }} -ldflags=-X=main.commit=${{ env.GITHUB_SHA }}" \
-          ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
+        ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
 
     - name: Install Cosign

@@ -28,14 +28,8 @@ const (
 var (
 	// Set at build time.
 	version = "v0.0.1-default"
-	commit  = ""
 
 	contextKey key
-
-	handler APIHandler = &server.APIHandler{
-		Version: version,
-		Commit:  commit,
-	}
 )
 
 type key int
@@ -46,17 +40,16 @@ type APIHandler interface {
 
 func main() {
 	initLogging()
-	log.Info().
-		Str("version", version).
-		Str("commit", commit).
-		Str("service", serviceName).
-		Msg("starting server")
+	log.Info().Str("service", serviceName).Msg("starting server")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "nothing to see here, try: /api/v1\n")
 	})
-	mux.HandleFunc("/api/v1", handler.RootHandler)
+
+	h := &server.APIHandler{Version: version}
+
+	mux.HandleFunc("/api/v1", h.RootHandler)
 
 	address := addressDefault
 	if val, ok := os.LookupEnv("PORT"); ok {
@@ -118,9 +111,5 @@ func initLogging() {
 		}
 	}
 
-	log.Logger = zerolog.New(os.Stdout).
-		With().
-		Str("version", version).
-		Str("commit", commit).
-		Logger()
+	log.Logger = zerolog.New(os.Stdout).With().Str("version", version).Logger()
 }
