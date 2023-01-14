@@ -122,9 +122,8 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@20920502faa542e0ae64c6309f120d8ce9f15b1e  # head
     secrets:
       registry-password: ${{ needs.image.outputs.access_token }}
     with:
