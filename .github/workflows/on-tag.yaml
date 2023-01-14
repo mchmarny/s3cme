@@ -118,25 +118,20 @@ jobs:
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${{ env.RELEASE_VERSION }}
 
-    - name: Generate Hashes
-      shell: bash
-      id: hash
-      run: |
-        echo ${{ env.RELEASE_VERSION }} > .tag
-        echo ${{ github.sha }} > .sha
-        echo "hashes=$(sha256sum .digest .tag .sha | base64 -w0)" >> "$GITHUB_OUTPUT"
-
   provenance:
     needs:
     - image
     permissions:
       actions: read
       id-token: write
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
+    secrets:
+      registry-password: ${{ needs.image.outputs.access_token }}
     with:
-      base64-subjects: "${{ needs.image.outputs.hashes }}"
-      upload-assets: true
+      registry-username: oauth2accesstoken
+      image: "${{ needs.image.outputs.image_uri }}"
+      digest: "${{ needs.image.outputs.image_digest }}"
       compile-generator: true
 
   verify:
@@ -153,25 +148,9 @@ jobs:
       - name: Install SLSA Verifier
         run: |
           go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.0.1
-      - name: Download Attestation
+      - name: Verify assets
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMG_DIGEST: "${{ needs.image.outputs.image_uri }}@${{ needs.image.outputs.image_digest }}"
         run: |
           set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "default.digest.intoto.jsonl"
-      # - name: Verify assets
-      #   env:
-      #     IMG_DIGEST: "${{ needs.image.outputs.image_uri }}@${{ needs.image.outputs.image_digest }}"
-      #     CHECKSUMS: ${{ needs.image.outputs.hashes }}
-      #     PROVENANCE: "${{ needs.provenance.outputs.attestation-name }}"
-      #   run: |
-      #     set -euo pipefail
-      #     checksums=$(echo "$CHECKSUMS" | base64 -d)
-      #     while read -r line; do
-      #         fn=$(echo $line | cut -d ' ' -f2)
-      #         echo "Verifying $fn"
-      #         verify-image -artifact-path "$fn" \
-      #                       -provenance "$PROVENANCE" \
-      #                       -source "github.com/$GITHUB_REPOSITORY" \
-      #                       -tag "$GITHUB_REF_NAME"
-      #     done <<<"$checksums"
+          slsa-verifier verify-image "$IMG_DIGEST" --source-uri "github.com/$GITHUB_REPOSITORY"
