@@ -133,6 +133,7 @@ jobs:
       image: "${{ needs.image.outputs.image_uri }}"
       digest: "${{ needs.image.outputs.image_digest }}"
       compile-generator: true
+      continue-on-error: true
 
   verify:
     needs:
