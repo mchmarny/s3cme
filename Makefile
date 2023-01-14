@@ -53,15 +53,13 @@ tagless: ## Delete the current release tag
 	git push --delete origin $(VERSION)
 .PHONY: tagless
 
-build: ## Publishes image directly using ko
-	KO_DOCKER_REPO=us-west1-docker.pkg.dev/cloudy-s3c/demo/demo \
-	KO_DEFAULTPLATFORMS=linux/amd64 \
-	GOFLAGS="-ldflags=-X=main.version=$(VERSION) -ldflags=-X=main.commit=$(COMMIT)" \
-		ko build cmd/server/main.go --image-refs .digest --bare --tags $(VERSION),latest
-.PHONY: build
-
 .PHONY: setup
-setup: ## Applies Terraform
+setup: ## Creates the GCP resources 
+	terraform -chdir=./setup init
+	terraform -chdir=./setup apply -auto-approve
+
+.PHONY: apply
+apply: ## Applies Terraform
 	terraform -chdir=./setup apply -auto-approve
 
 clean: ## Cleans bin and temp directories
