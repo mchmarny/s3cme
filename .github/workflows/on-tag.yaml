@@ -131,6 +131,7 @@ jobs:
       registry-username: oauth2accesstoken
       image: "${{ needs.image.outputs.image_uri }}"
       digest: "${{ needs.image.outputs.image_digest }}"
+      compile-generator: true
 
   verification:
     needs:
