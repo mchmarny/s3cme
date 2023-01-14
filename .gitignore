@@ -24,3 +24,4 @@ cosign.*
 *.tfvars
 *.hcl
 .terraform
+*.backup

@@ -1,39 +1,115 @@
-name: publish
-
+name: tag
 on:
   push:
     tags:
-      - 'v*.*.*'
-
-# Using secrets for potentially not private data to workaround limitation in
-# GitHub Actions where you can't use env vars or shared inputs to pass across
-# to multiple reusable jobs.
-# Context: https://github.com/community/community/discussions/17554.
+    - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
+env:
+  COSIGN_VERSION: v1.13.1
+  REG_URI: us-west1-docker.pkg.dev
+  IMAGE_REG: cloudy-s3c/s3cme
+  IMAGE_NAME: s3cme
+  SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
+  PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+  KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
 
 jobs:
 
   test:
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
     uses: ./.github/workflows/test.yaml
-    secrets:
-      token: ${{ secrets.SNYK_TOKEN }}
 
   image:
-    uses: ./.github/workflows/image.yaml
-    needs: test
-    secrets:
-      registry: ${{ secrets.REGISTRY_URI }}
-      id_provider: ${{ secrets.ID_PROVIDER }}
-      service_account: ${{ secrets.SERVICE_ACCOUNT }}
-    with:
-      image: us-west1-docker.pkg.dev/cloudy-demos/hello-gha/hello
+    runs-on: ubuntu-latest
+    needs:
+    - test
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+    steps:
 
-  sign:
-    uses: ./.github/workflows/sign.yaml
-    needs: image
-    secrets:
-      registry: ${{ secrets.REGISTRY_URI }}
-      id_provider: ${{ secrets.ID_PROVIDER }}
-      service_account: ${{ secrets.SERVICE_ACCOUNT }}
-      key: ${{ secrets.KMS_KEY }}
-    with:
-      digest: ${{ needs.image.outputs.digest }}
+    - name: Setup Go
+      uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+      with:
+        go-version: ^1.19.5
+
+    - run: go version
+
+    - name: Cache Go Modules
+      uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d  # v3.2.2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Checkout Code
+      uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
+
+    - name: Tidy Modules
+      run: |
+        go mod tidy
+        go mod vendor
+
+    - name: Capture Variables
+      run: |
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ env.PROVIDER_ID }}
+        service_account: ${{ env.SA_EMAIL }}
+
+    - name: Install ko
+      uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
+
+    - name: Authenticate ko
+      env:
+        auth_token: ${{ steps.auth.outputs.access_token }}
+      run: |
+        echo "${auth_token}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
+
+    - name: Build Image
+      run: |
+        KO_DOCKER_REPO=${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }} \
+        GOFLAGS="-ldflags=-X=main.version=${{ env.RELEASE_VERSION }} -ldflags=-X=main.commit=${{ env.GITHUB_SHA }}" \
+          ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
+        echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
+      with:
+        cosign-release: ${{ env.COSIGN_VERSION }}
+
+    - name: Auth Cosign
+      run: |
+        cosign version
+        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+
+    - name: Attest Image
+      run: |
+        cosign sign ${{ env.IMAGE_DIGEST }} \
+            -a sha=${{ github.sha }} \
+            -a run_id=${{ github.run_id }} \
+            -a run_attempt=${{ github.run_attempt }} \
+            -a tag=${tag}
+
+    - name: Generate Hashes
+      shell: bash
+      id: hash
+      run: |
+        echo "HASHES=$(sha256sum go.mod .digest | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+    - name: Generate SLSA
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+      with:
+        base64-subjects: ${{ env.HASHES }}
+        upload-assets: true
