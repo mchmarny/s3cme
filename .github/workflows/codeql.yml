@@ -19,15 +19,15 @@ jobs:
       matrix:
         language: [ 'go' ]
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@ff3337ee1b38c9bcf43046bde6450e50c5e88ebb  # v2.12.0
       with:
         languages: ${{ matrix.language }}
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@ff3337ee1b38c9bcf43046bde6450e50c5e88ebb  # v2.12.0
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@ff3337ee1b38c9bcf43046bde6450e50c5e88ebb  # v2.12.0
       with:
         category: "/language:${{matrix.language}}"
