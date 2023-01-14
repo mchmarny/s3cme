@@ -23,7 +23,9 @@ jobs:
 
   image:
     outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
+      image_digest: ${{ steps.image.outputs.digest }}
+      image_uri: ${{ steps.image.outputs.uri }}
+      access_token: ${{ steps.token.outputs.access_token }}
     runs-on: ubuntu-latest
     needs:
     - test
@@ -70,6 +72,11 @@ jobs:
         workload_identity_provider: ${{ env.PROVIDER_ID }}
         service_account: ${{ env.SA_EMAIL }}
 
+    - name: Output Token
+      id: token
+      run: |
+        echo "access_token=${{ steps.auth.outputs.access_token }}" >> "$GITHUB_OUTPUT"
+
     - name: Install ko
       uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
 
@@ -80,12 +87,15 @@ jobs:
         echo "${auth_token}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
+      id: image
       env:
         KO_DOCKER_REPO: ${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
       run: |
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
+        echo "uri=$(cat .digest | cut -d'@' -f 1)" >> "$GITHUB_OUTPUT"
+        echo "digest=$(cat .digest | cut -d'@' -f 2)" >> "$GITHUB_OUTPUT"
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
@@ -106,12 +116,6 @@ jobs:
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${tag}
 
-    - name: Generate Hashes
-      shell: bash
-      id: hash
-      run: |
-        echo "hashes=$(sha256sum .digest | base64 -w0)" >> "$GITHUB_OUTPUT"
-
   provenance:
     needs:
     - image
@@ -119,11 +123,13 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+    secrets:
+      registry-username: oauth2accesstoken
+      registry-password: ${{ needs.image.outputs.access_token }}
     with:
-      base64-subjects: "${{ needs.image.outputs.hashes }}"
-      upload-assets: true
-      compile-generator: true
+      image: "${{ needs.image.outputs.image_uri }}"
+      digest: "${{ needs.image.outputs.image_digest }}"
 
   verification:
     needs:
