@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	v1 "github.com/mchmarny/s3c-pipeline-demo/cmd/server/v1"
+	server "github.com/mchmarny/s3cme/cmd/server/v1"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -32,7 +32,7 @@ var (
 
 	contextKey key
 
-	handler APIHandler = &v1.APIHandler{
+	handler APIHandler = &server.APIHandler{
 		Version: version,
 		Commit:  commit,
 	}

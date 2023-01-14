@@ -8,7 +8,7 @@ variable "project_id" {
 
 variable "name" {
   description = "Base name to derive everythign else from"
-  default     = "demo"
+  default     = "s3cme"
   type        = string
   nullable    = false
 }

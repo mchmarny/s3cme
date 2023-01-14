@@ -1,4 +1,4 @@
-module github.com/mchmarny/s3c-pipeline-demo
+module github.com/mchmarny/s3cme
 
 go 1.19
 
