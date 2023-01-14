@@ -125,9 +125,9 @@ jobs:
       contents: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
     secrets:
-      registry-username: oauth2accesstoken
       registry-password: ${{ needs.image.outputs.access_token }}
     with:
+      registry-username: oauth2accesstoken
       image: "${{ needs.image.outputs.image_uri }}"
       digest: "${{ needs.image.outputs.image_digest }}"
 
@@ -147,16 +147,10 @@ jobs:
           go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.0.1
       - name: Verify assets
         env:
-          CHECKSUMS: ${{ needs.image.outputs.hashes }}
-          PROVENANCE: "${{ needs.provenance.outputs.attestation-name }}"
+          IMG_DIGEST: "${{ needs.image.outputs.image_uri }}@${{ needs.image.outputs.image_digest }}"
         run: |
           set -euo pipefail
-          checksums=$(echo "$CHECKSUMS" | base64 -d)
-          while read -r line; do
-              fn=$(echo $line | cut -d ' ' -f2)
-              echo "Verifying $fn"
-              slsa-verifier -artifact-path "$fn" \
-                            -provenance "$PROVENANCE" \
-                            -source "github.com/$GITHUB_REPOSITORY" \
-                            -tag "$GITHUB_REF_NAME"
-          done <<<"$checksums"
+          slsa-verifier verify-image "$IMG_DIGEST" \
+            --provenance-path "$PROVENANCE" \
+            --source-uri "github.com/$GITHUB_REPOSITORY" \
+            --source-tag "$GITHUB_REF_NAME"
