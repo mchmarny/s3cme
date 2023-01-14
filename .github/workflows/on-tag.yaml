@@ -124,7 +124,7 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@20920502faa542e0ae64c6309f120d8ce9f15b1e  # head
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main  # head
     secrets:
       registry-password: ${{ needs.image.outputs.access_token }}
     with:
@@ -133,7 +133,7 @@ jobs:
       digest: "${{ needs.image.outputs.image_digest }}"
       compile-generator: true
 
-  verification:
+  verify:
     needs:
     - image
     - provenance
