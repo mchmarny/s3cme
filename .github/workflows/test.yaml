@@ -1,4 +1,5 @@
 name: test
+
 on:
   workflow_call:
     inputs:
@@ -6,14 +7,16 @@ on:
         description: 'Go version to use'
         required: false
         type: string
-        default: ^1.19.4
+        default: ^1.19.5
       scan-severity:
         description: 'Error on vulnerability scan severity'
         required: false
         type: string
         default: 'CRITICAL,HIGH,MEDIUM'
+
 permissions:
   contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,11 +24,14 @@ jobs:
       security-events: write
       id-token: write
     steps:
+
     - name: Setup Go
       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
       with:
         go-version: ${{ inputs.go-version }}
+
     - run: go version
+
     - name: Cache Go Modules
       uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d  # v3.2.2
       with:
@@ -35,31 +41,38 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+
     - name: Checkout Code
       uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
+
     - name: Tidy Modules
       run: |
         make tidy
+
     - name: Config Go Lint
       id: golangci_config
       uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b  # v2.0
       with:
         files: .golangci.yaml
+
     - name: Lint Go
       if: steps.golangci_config.outputs.files_exists == 'true'
       uses: golangci/golangci-lint-action@0ad9a0988b3973e851ab0a07adf248ec2e100376  # v3.3.1
       with:
         version: latest
+
     - name: Config YAML Lint
       id: yamllint_config
       uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b  # v2.0
       with:
         files: .yamllint
+
     - name: Lint YAML
       if: steps.yamllint_config.outputs.files_exists == 'true'
       uses: karancode/yamllint-github-action@234e9eaa717ea611161a54e71cb027da9878f2ef  # master
       with:
         yamllint_config_filepath: .yamllint
+
     - name: Scan Repo
       uses: aquasecurity/trivy-action@9ab158e8597f3b310480b9a69402b419bc03dbd5  # master
       with:
@@ -70,12 +83,15 @@ jobs:
         output: 'trivy-results.sarif'
         severity: ${{ inputs.scan-severity }}
         exit-code: '1'
+
     - name: Unit Test
       run: |
         make test
+
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70  # v3.1.1
       with:
         flags: unittests  # optional
+
     - name: Upload Report
       uses: github/codeql-action/upload-sarif@515828d97454b8354517688ddc5b48402b723750  # v2.11.6
       with:
