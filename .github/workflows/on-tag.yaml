@@ -1,0 +1,39 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Using secrets for potentially not private data to workaround limitation in
+# GitHub Actions where you can't use env vars or shared inputs to pass across
+# to multiple reusable jobs.
+# Context: https://github.com/community/community/discussions/17554.
+
+jobs:
+
+  test:
+    uses: ./.github/workflows/test.yaml
+    secrets:
+      token: ${{ secrets.SNYK_TOKEN }}
+
+  image:
+    uses: ./.github/workflows/image.yaml
+    needs: test
+    secrets:
+      registry: ${{ secrets.REGISTRY_URI }}
+      id_provider: ${{ secrets.ID_PROVIDER }}
+      service_account: ${{ secrets.SERVICE_ACCOUNT }}
+    with:
+      image: us-west1-docker.pkg.dev/cloudy-demos/hello-gha/hello
+
+  sign:
+    uses: ./.github/workflows/sign.yaml
+    needs: image
+    secrets:
+      registry: ${{ secrets.REGISTRY_URI }}
+      id_provider: ${{ secrets.ID_PROVIDER }}
+      service_account: ${{ secrets.SERVICE_ACCOUNT }}
+      key: ${{ secrets.KMS_KEY }}
+    with:
+      digest: ${{ needs.image.outputs.digest }}
