@@ -99,6 +99,7 @@ jobs:
     - name: Attest Image
       run: |
         cosign sign ${{ env.IMAGE_DIGEST }} \
+            --kms ${{ env.KMS_KEY }} \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
