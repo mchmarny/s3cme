@@ -1,4 +1,5 @@
 name: push
+
 on:
   push:
     branches:
@@ -6,6 +7,11 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   test:
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
     uses: ./.github/workflows/test.yaml
