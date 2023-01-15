@@ -1,0 +1,151 @@
+name: image_build_and_sign
+
+on:
+  workflow_call:
+    inputs:
+      image_repo:
+        description: 'Fully-qualified image repo (registry/project/repo/image)'
+        required: true
+        type: string
+      auth_provider:
+        description: 'OIDC provider ID'
+        required: true
+        type: string
+      auth_user:
+        description: 'OIDC user ID'
+        required: true
+        type: string
+      kms_key:
+        description: 'KMS key to use for signing'
+        required: true
+        type: string
+      cosign_version:
+        description: 'The version of cosign to use'
+        required: false
+        type: string
+        default: 'v1.13.1'
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: ^1.19.5
+      scan-severity:
+        description: 'Error on vulnerability scan severity'
+        required: false
+        type: string
+        default: 'CRITICAL,HIGH,MEDIUM'
+
+permissions:
+  contents: read
+
+
+jobs:
+  build:
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      packages: write
+    steps:
+
+    - name: Setup Go
+      uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - run: go version
+
+    - name: Cache Go Modules
+      uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d  # v3.2.2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Checkout Code
+      uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
+
+    - name: Tidy Modules
+      run: |
+        go mod tidy
+        go mod vendor
+
+    - name: Capture Variables
+      run: |
+        set -euo pipefail
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ input.auth_provider }}
+        service_account: ${{ input.auth_user }}
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
+      with:
+        cosign-release: ${{ input.cosign_version }}
+
+    - name: Auth Cosign
+      env:
+        REG_URI: $(echo ${{ inputs.image_repo }} | cut -d/ -f1)
+      run: |
+        set -euo pipefail
+        cosign version
+        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+
+    - name: Install ko
+      uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
+
+    - name: Authenticate ko
+      env:
+        AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
+        REG_URI: $(echo ${{ inputs.image_repo }} | cut -d/ -f1)
+      run: |
+        set -euo pipefail
+        echo "${AUTH_TOKEN}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
+
+    - name: Build Image
+      id: image
+      env:
+        KO_DOCKER_REPO: ${{ inputs.image_repo }}
+        GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
+        COSIGN_EXPERIMENTAL: "true"
+      run: |
+        set -euo pipefail
+        ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
+        echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
+        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
+
+    - name: Scan Image
+      uses: aquasecurity/trivy-action@9ab158e8597f3b310480b9a69402b419bc03dbd5  # 0.8.0
+      with:
+        scan-type: image
+        security-checks: vuln
+        severity: ${{ input.scan-severity }}
+        image-ref: ${{ env.IMAGE_DIGEST }}
+        format: sarif
+        output: trivy-results.sarif
+        hide-progress: true
+        timeout: "10m"
+        exit-code: "1"
+      env:
+        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
+
+    - name: Attest Image
+      run: |
+        set -euo pipefail
+        cosign sign ${{ env.IMAGE_DIGEST }} \
+            --key ${{ input.kms_key }} \
+            -a sha=${{ github.sha }} \
+            -a run_id=${{ github.run_id }} \
+            -a run_attempt=${{ github.run_attempt }} \
+            -a tag=${{ env.RELEASE_VERSION }}

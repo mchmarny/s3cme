@@ -38,8 +38,6 @@ permissions:
 jobs:
   provenance:
     runs-on: ubuntu-latest
-    needs:
-    - build
     permissions:
       actions: read
       id-token: write

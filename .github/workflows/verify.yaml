@@ -27,9 +27,6 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    needs:
-    - build
-    - provenance
     permissions:
       actions: read
       id-token: write
