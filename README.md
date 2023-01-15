@@ -18,7 +18,32 @@ What's included in the PR qualification (on push), and release (on tag) pipeline
 
 ## Usage 
 
-1. 
+1. Use this template to create a new repo (green button)
+1. Clone the new repo locally and navigate into it
+1. Run Terraform init
+```shell
+terraform -chdir=./setup init
+```
+1. Apply the Terraform configuration
+```shell
+terraform -chdir=./setup apply
+```
+1. When promoted, provide:
+   * `project_id` - GCP project ID
+   * `location` - GCP region
+   * `git_repo` - Your qualified name of your repo (e.g. `username/repo`)
+   * `name` - your application name (e.g. the repo portion from `git_repo`)
+1. Update following in `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform
+   * `IMG_NAME`
+   * `KMS_KEY`
+   * `PROVIDER_ID`
+   * `REG_URI`
+SA_EMAIL = "s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com"
+1. Update template Go and CUE policy references to your repo:
+   * `./go.mod:module`
+   * `./cmd/server/main.go`
+   * `./policy/provenance.cue`
+1. Write some code, PR and tag as needed ;) 
 
 ## Disclaimer
 
