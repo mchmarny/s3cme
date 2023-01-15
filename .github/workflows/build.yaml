@@ -28,12 +28,12 @@ on:
         required: false
         type: string
         default: 'v1.13.1'
-      go-version:
+      go_version:
         description: 'Go version to use'
         required: false
         type: string
         default: ^1.19.5
-      scan-severity:
+      scan_severity:
         description: 'Error on vulnerability scan severity'
         required: false
         type: string
