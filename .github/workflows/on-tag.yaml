@@ -206,6 +206,9 @@ jobs:
           ${{ needs.build.outputs.digest }}
 
   verify:
+    needs:
+    - build
+    - provenance
     permissions:
       contents: read
       actions: read

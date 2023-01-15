@@ -40,13 +40,13 @@ jobs:
       uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
       with:
         token_format: "access_token"
-        workload_identity_provider: ${{ input.auth_provider }}
-        service_account: ${{ input.auth_user }}
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
       with:
-        cosign-release: ${{ input.cosign_version }}
+        cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
       run: |
@@ -62,4 +62,4 @@ jobs:
         cosign verify-attestation \
           --type slsaprovenance \
           --policy policy/provenance.cue \
-          ${{ input.image_digest }}
+          ${{ inputs.image_digest }}
