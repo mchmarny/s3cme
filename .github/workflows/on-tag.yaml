@@ -6,7 +6,7 @@ on:
 env:
   COSIGN_VERSION: v1.13.1
   BUILDER_VERSION: v1.4.0
-  GO_VERSION: ^1.19.5
+  GO_VERSION: "1.19.5"
   REG_URI: us-west1-docker.pkg.dev
   IMAGE_REG: cloudy-s3c/s3cme
   IMAGE_NAME: s3cme
