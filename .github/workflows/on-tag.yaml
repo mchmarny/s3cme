@@ -19,6 +19,7 @@ env:
   BUILDER_VERSION: v1.4.0
   PREDICATE_FILE: predicate.json
   GO_VERSION: "1.19.5"
+  ERR_ON_IMG_SEV: "CRITICAL,HIGH,MEDIUM"
 
 jobs:
 
@@ -101,6 +102,21 @@ jobs:
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
+
+    - name: Scan Image
+      uses: aquasecurity/trivy-action@9ab158e8597f3b310480b9a69402b419bc03dbd5  # 0.8.0
+      with:
+        scan-type: image
+        security-checks: vuln
+        severity: ${{ env.ERR_ON_IMG_SEV }}
+        image-ref: ${{ env.IMAGE_DIGEST }}
+        format: sarif
+        output: trivy-results.sarif
+        hide-progress: true
+        timeout: "10m"
+        exit-code: "1"
+      env:
+        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
