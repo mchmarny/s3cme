@@ -123,7 +123,7 @@ jobs:
       with:
         scan-type: image
         security-checks: vuln
-        severity: ${{ inputs.scan-severity }}
+        severity: ${{ inputs.scan_severity }}
         image-ref: ${{ env.IMAGE_DIGEST }}
         format: sarif
         output: trivy-results.sarif

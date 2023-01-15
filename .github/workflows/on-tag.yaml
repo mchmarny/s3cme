@@ -80,7 +80,7 @@ jobs:
       image_name: ${{ needs.conf.outputs.image_name }}
       image_repo: ${{ needs.conf.outputs.registry_uri }}
       kms_key: ${{ needs.conf.outputs.kms_key }}
-      scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
+      scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   provenance:
     needs:
