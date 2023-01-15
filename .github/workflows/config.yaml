@@ -63,7 +63,7 @@ jobs:
       service_account: ${{ steps.conf.outputs.service_account }}
       kms_key: ${{ steps.conf.outputs.kms_key }}
     steps:
-    
+
     - name: Export Config
       id: conf
       run: |
