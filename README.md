@@ -39,7 +39,7 @@ terraform -chdir=./setup apply
    * `PROVIDER_ID`
    * `REG_URI`
 SA_EMAIL = "s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com"
-1. Update template Go and CUE policy references to your repo:
+1. Update Go and CUE policy file references to your own repo:
    * `./go.mod:module`
    * `./cmd/server/main.go`
    * `./policy/provenance.cue`
