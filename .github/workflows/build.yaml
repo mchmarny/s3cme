@@ -103,7 +103,7 @@ jobs:
         AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
       run: |
         set -euo pipefail
-        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        reg=$(echo ${{ inputs.image_repo }} | cut -d/ -f1)
         echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
@@ -142,7 +142,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign version
-        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        reg=$(echo ${{ env.IMAGE_DIGEST }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
