@@ -102,6 +102,7 @@ jobs:
   provenance:
     needs:
     - conf
+    - build
     - sign
     permissions:
       contents: read
