@@ -24,7 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     outputs:
       builder_version: ${{ steps.conf.outputs.builder_version }}
       cosign_version: ${{ steps.conf.outputs.cosign_version }}

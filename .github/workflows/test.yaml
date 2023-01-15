@@ -7,7 +7,7 @@ on:
         description: 'Go version to use'
         required: false
         type: string
-        default: ^1.19.5
+        default: '1.19.5'
       scan_severity:
         description: 'Error on vulnerability scan severity'
         required: false
