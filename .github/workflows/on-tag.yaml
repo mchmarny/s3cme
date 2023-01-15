@@ -64,13 +64,14 @@ jobs:
 
   build:
     needs:
+    - conf
     - test
     permissions:
       contents: read
       actions: read
       id-token: write
       packages: write
-    uses: ./.github/workflows/provenance.yaml
+    uses: ./.github/workflows/build.yaml
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
