@@ -15,6 +15,10 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
+      kms_key:
+        description: 'KMS key to use for signing'
+        required: true
+        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
@@ -98,6 +102,7 @@ jobs:
         set -euo pipefail
         cosign attest \
           --predicate ${{ inputs.predicate_file }} \
+          --key ${{ inputs.kms_key }} \
           --type slsaprovenance \
           --force \
           ${{ inputs.image_digest }}

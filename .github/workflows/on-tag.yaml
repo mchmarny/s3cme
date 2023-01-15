@@ -99,6 +99,7 @@ jobs:
       builder_version: ${{ needs.conf.outputs.builder_version }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
+      kms_key: ${{ needs.conf.outputs.kms_key }}
 
   verify:
     needs:
@@ -115,3 +116,4 @@ jobs:
       auth_user: ${{ needs.conf.outputs.service_account }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
+      kms_key: ${{ needs.conf.outputs.kms_key }}

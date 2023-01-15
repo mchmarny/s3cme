@@ -15,6 +15,10 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
+      kms_key:
+        description: 'KMS key to use for signing'
+        required: true
+        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
@@ -63,4 +67,5 @@ jobs:
         cosign verify-attestation \
           --type slsaprovenance \
           --policy policy/provenance.cue \
+          --key ${{ inputs.kms_key }} \
           ${{ inputs.image_digest }}
