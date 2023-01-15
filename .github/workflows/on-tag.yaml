@@ -71,6 +71,7 @@ jobs:
       run: |
         set -euo pipefail
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        echo "REGISTRY=$(echo ${{ env.REG_URI }} | cut -d/ -f1)" >> $GITHUB_ENV
 
     - id: auth
       name: Auth GCP
@@ -86,15 +87,14 @@ jobs:
     - name: Authenticate ko
       env:
         AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
-        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
-        echo "${AUTH_TOKEN}" | ko login "${REG_URI}" --username oauth2accesstoken --password-stdin
+        echo "${AUTH_TOKEN}" | ko login ${{ env.REGISTRY }} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
       env:
-        KO_DOCKER_REPO: ${{ env.REG_URI }}/s3cme
+        KO_DOCKER_REPO: "${{ env.REG_URI }}/s3cme"
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |
@@ -125,12 +125,10 @@ jobs:
         cosign-release: ${{ env.COSIGN_VERSION }}
 
     - name: Auth Cosign
-      env:
-        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login ${{ env.REGISTRY }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
       run: |
@@ -188,13 +186,18 @@ jobs:
       with:
         cosign-release: ${{ env.COSIGN_VERSION }}
 
+    - name: Capture Variables
+      run: |
+        set -euo pipefail
+        echo "REGISTRY=$(echo ${{ env.REG_URI }} | cut -d/ -f1)" >> $GITHUB_ENV
+
     - name: Auth Cosign
       env:
         REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login "${{ env.REGISTRY }}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Create SLSA Provenance
       env:
