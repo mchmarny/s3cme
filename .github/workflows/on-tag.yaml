@@ -3,8 +3,28 @@ on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
-env:
+  workflow_dispatch:
+    inputs:
+      registry_uri:
+        description: 'Do a build and verify'
+        default: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
+      provider_id:
+        description: 'OIDC provider ID'
+        default: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+      service_account:
+        description: 'Email of the service account to use with OIDC provider'
+        default: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
+      kms_key:
+        description: 'KMS key path'
+        default: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
+      cosign_version:
+        description: 'Version of Cosign to use for signing'
+        default: v1.13.1
+      go_version:
+        description: 'Version og Go to use for tests'
+        default: ^1.19.5
 
+env:
   # Update these based on the Setup output
   REG_URI: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
   SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
@@ -153,8 +173,8 @@ jobs:
     uses: ./.github/workflows/provenance.yaml
     with:
       image_digest: ${{ needs.build.outputs.digest }}
-      auth_provider: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
-      auth_user: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
+      auth_provider: ${{ github.event.inputs.provider_id }}
+      auth_user: ${{ github.event.inputs.service_account }}
 
   verify:
     needs:
@@ -167,5 +187,5 @@ jobs:
     uses: ./.github/workflows/verify.yaml
     with:
       image_digest: ${{ needs.build.outputs.digest }}
-      auth_provider: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
-      auth_user: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
+      auth_provider: ${{ github.event.inputs.provider_id }}
+      auth_user: ${{ github.event.inputs.service_account }}
