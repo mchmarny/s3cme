@@ -6,9 +6,7 @@ on:
 env:
 
   # Update these based on the Setup output
-  REG_URI: us-west1-docker.pkg.dev
-  IMAGE_REG: cloudy-s3c/s3cme
-  IMAGE_NAME: s3cme
+  REG_URI: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
   SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
   PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
   KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
@@ -87,15 +85,16 @@ jobs:
 
     - name: Authenticate ko
       env:
-        auth_token: ${{ steps.auth.outputs.access_token }}
+        AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
+        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
-        echo "${auth_token}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
+        echo "${AUTH_TOKEN}" | ko login "${REG_URI }" --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
       env:
-        KO_DOCKER_REPO: ${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }}
+        KO_DOCKER_REPO: ${{ env.REG_URI }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |
@@ -126,10 +125,12 @@ jobs:
         cosign-release: ${{ env.COSIGN_VERSION }}
 
     - name: Auth Cosign
+      env:
+        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
       run: |
@@ -188,10 +189,12 @@ jobs:
         cosign-release: ${{ env.COSIGN_VERSION }}
 
     - name: Auth Cosign
+      env:
+        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Create SLSA Provenance
       env:

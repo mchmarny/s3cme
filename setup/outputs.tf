@@ -1,18 +1,8 @@
 # Description: Outputs for the deployment
 
 output "REG_URI" {
-  value       = "${google_artifact_registry_repository.registry.location}-docker.pkg.dev"
-  description = "Artifact Registry location."
-}
-
-output "IMAGE_URI" {
-  value       = "${data.google_project.project.name}/${google_artifact_registry_repository.registry.name}"
-  description = "Artifact Registry location."
-}
-
-output "IMAGE_NAME" {
-  value       = google_artifact_registry_repository.registry.name
-  description = "Artifact Registry location."
+  value       = "${google_artifact_registry_repository.registry.location}-docker.pkg.dev/${data.google_project.project.name}/${google_artifact_registry_repository.registry.name}"
+  description = "Fully qualified Artifact Registry URI."
 }
 
 output "SA_EMAIL" {
