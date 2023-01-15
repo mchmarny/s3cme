@@ -23,8 +23,6 @@ jobs:
       security-events: write
       id-token: write
     uses: ./.github/workflows/test.yaml
-    with:
-      go-version: ${{ env.GO_VERSION }}
 
   release:
     outputs:
