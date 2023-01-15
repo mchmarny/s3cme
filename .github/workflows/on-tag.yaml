@@ -3,167 +3,87 @@ on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
-  workflow_dispatch:
-    inputs:
-      registry_uri:
-        description: 'Do a build and verify'
-        default: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
-      provider_id:
-        description: 'OIDC provider ID'
-        default: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
-      service_account:
-        description: 'Email of the service account to use with OIDC provider'
-        default: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
-      kms_key:
-        description: 'KMS key path'
-        default: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
-      cosign_version:
-        description: 'Version of Cosign to use for signing'
-        default: v1.13.1
-      go_version:
-        description: 'Version og Go to use for tests'
-        default: ^1.19.5
-
-env:
-  # Update these based on the Setup output
-  REG_URI: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
-  SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
-  PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
-  KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
-
-  # Defaults
-  COSIGN_VERSION: v1.13.1
-  BUILDER: slsa-generator-container-linux-amd64
-  BUILDER_VERSION: v1.4.0
-  PREDICATE_FILE: predicate.json
-  GO_VERSION: "1.19.5"
-  ERR_ON_IMG_SEV: "CRITICAL,HIGH,MEDIUM"
 
 jobs:
 
+  conf:
+    env:
+      # Update these based on the Setup output
+      IMG_NAME: s3cme
+      KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
+      PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+      REG_URI: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
+      SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
+
+      # Defaults
+      BUILDER_VERSION: v1.4.0
+      COSIGN_VERSION: v1.13.1
+      ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
+      GO_VERSION: "1.19.5"
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      builder_version: ${{ steps.conf.outputs.builder_version }}
+      cosign_version: ${{ steps.conf.outputs.cosign_version }}
+      err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
+      go_version: ${{ steps.conf.outputs.go_version }}
+      image_name: ${{ steps.conf.outputs.image_name }}
+      kms_key: ${{ steps.conf.outputs.kms_key }}
+      provider_id: ${{ steps.conf.outputs.provider_id }}
+      registry_uri: ${{ steps.conf.outputs.registry_uri }}
+      service_account: ${{ steps.conf.outputs.service_account }}
+    steps:
+
+    - name: Export Config
+      id: conf
+      run: |
+        echo "builder_version=${{ env.BUILDER_VERSION }}" >> $GITHUB_OUTPUT
+        echo "cosign_version=${{ env.COSIGN_VERSION }}" >> $GITHUB_OUTPUT
+        echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
+        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
+        echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
+        echo "kms_key=${{ env.KMS_KEY }}" >> $GITHUB_OUTPUT
+        echo "provider_id=${{ env.PROVIDER_ID }}" >> $GITHUB_OUTPUT
+        echo "registry_uri=${{ env.REG_URI }}" >> $GITHUB_OUTPUT
+        echo "service_account=${{ env.SA_EMAIL }}" >> $GITHUB_OUTPUT
+
   test:
+    needs:
+    - conf
     permissions:
       contents: read
       security-events: write
       id-token: write
     uses: ./.github/workflows/test.yaml
+    with:
+      go_version: ${{ needs.conf.outputs.go_version }}
+      scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   build:
-    outputs:
-      digest: ${{ steps.image.outputs.digest }}
-      tag: ${{ steps.image.outputs.tag }}
-    runs-on: ubuntu-latest
     needs:
     - test
     permissions:
+      contents: read
       actions: read
-      contents: write
       id-token: write
       packages: write
-    steps:
-
-    - name: Setup Go
-      uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
-    - run: go version
-
-    - name: Cache Go Modules
-      uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d  # v3.2.2
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Checkout Code
-      uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
-
-    - name: Tidy Modules
-      run: |
-        go mod tidy
-        go mod vendor
-
-    - name: Capture Variables
-      run: |
-        set -euo pipefail
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        echo "REGISTRY=$(echo ${{ env.REG_URI }} | cut -d/ -f1)" >> $GITHUB_ENV
-
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ env.PROVIDER_ID }}
-        service_account: ${{ env.SA_EMAIL }}
-
-    - name: Install ko
-      uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
-
-    - name: Authenticate ko
-      env:
-        AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
-      run: |
-        set -euo pipefail
-        reg=$(echo ${{ env.REGISTRY }} | cut -d/ -f1)
-        echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
-
-    - name: Build Image
-      id: image
-      env:
-        KO_DOCKER_REPO: "${{ env.REG_URI }}/s3cme"
-        GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
-        COSIGN_EXPERIMENTAL: "true"
-      run: |
-        set -euo pipefail
-        ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
-        echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
-        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
-        echo "tag=${{ env.RELEASE_VERSION }}" >> "$GITHUB_OUTPUT"
-
-    - name: Scan Image
-      uses: aquasecurity/trivy-action@9ab158e8597f3b310480b9a69402b419bc03dbd5  # 0.8.0
-      with:
-        scan-type: image
-        security-checks: vuln
-        severity: ${{ env.ERR_ON_IMG_SEV }}
-        image-ref: ${{ env.IMAGE_DIGEST }}
-        format: sarif
-        output: trivy-results.sarif
-        hide-progress: true
-        timeout: "10m"
-        exit-code: "1"
-      env:
-        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
-
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
-      with:
-        cosign-release: ${{ env.COSIGN_VERSION }}
-
-    - name: Auth Cosign
-      run: |
-        set -euo pipefail
-        cosign version
-        reg=$(echo ${{ env.REGISTRY }} | cut -d/ -f1)
-        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
-
-    - name: Attest Image
-      run: |
-        set -euo pipefail
-        cosign sign ${{ env.IMAGE_DIGEST }} \
-            --key ${{ env.KMS_KEY }} \
-            -a sha=${{ github.sha }} \
-            -a run_id=${{ github.run_id }} \
-            -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ env.RELEASE_VERSION }}
+    uses: ./.github/workflows/provenance.yaml
+    with:
+      auth_provider: ${{ needs.conf.outputs.provider_id }}
+      auth_user: ${{ needs.conf.outputs.service_account }}
+      cosign_version: ${{ needs.conf.outputs.cosign_version }}
+      go_version: ${{ needs.conf.outputs.go_version }}
+      image_name: ${{ needs.conf.outputs.image_name }}
+      image_repo: ${{ needs.conf.outputs.registry_uri }}
+      kms_key: ${{ needs.conf.outputs.kms_key }}
+      scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   provenance:
     needs:
+    - conf
     - build
     permissions:
       contents: read
@@ -172,12 +92,15 @@ jobs:
       packages: write
     uses: ./.github/workflows/provenance.yaml
     with:
+      auth_provider: ${{ needs.conf.outputs.provider_id }}
+      auth_user: ${{ needs.conf.outputs.service_account }}
+      builder_version: ${{ needs.conf.outputs.builder_version }}
+      cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
-      auth_provider: ${{ github.event.inputs.provider_id }}
-      auth_user: ${{ github.event.inputs.service_account }}
 
   verify:
     needs:
+    - conf
     - build
     - provenance
     permissions:
@@ -186,6 +109,7 @@ jobs:
       id-token: write
     uses: ./.github/workflows/verify.yaml
     with:
+      auth_provider: ${{ needs.conf.outputs.provider_id }}
+      auth_user: ${{ needs.conf.outputs.service_account }}
+      cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
-      auth_provider: ${{ github.event.inputs.provider_id }}
-      auth_user: ${{ github.event.inputs.service_account }}
