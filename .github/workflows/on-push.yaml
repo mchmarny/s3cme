@@ -33,6 +33,8 @@ jobs:
         echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
 
   test:
+    needs:
+    - conf
     permissions:
       contents: read
       security-events: write
