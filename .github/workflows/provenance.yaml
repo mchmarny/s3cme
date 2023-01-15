@@ -69,7 +69,7 @@ jobs:
         COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        "./$BUILDER" generate --predicate ${{ inputs.predicate_file }}
+        "./${{ inputs.builder }}" generate --predicate ${{ inputs.predicate_file }}
 
     - id: auth
       name: Auth GCP
