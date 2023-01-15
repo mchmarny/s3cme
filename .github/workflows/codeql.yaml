@@ -1,4 +1,4 @@
-name: analyze
+name: code_analyze
 on:
   push:
     branches:

@@ -1,4 +1,4 @@
-name: slsa_provenance_verification
+name: slsa_provenance_verify
 
 on:
   workflow_call:

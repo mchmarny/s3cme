@@ -1,4 +1,4 @@
-name: slsa_provenance_creation
+name: slsa_provenance_create
 
 on:
   workflow_call:
@@ -20,6 +20,11 @@ on:
         required: false
         type: string
         default: 'v1.13.1'
+      builder:
+        description: 'Name of the SLSA provenance builder to use'
+        required: false
+        type: string
+        default: slsa-generator-container-linux-amd64
       builder_version:
         description: 'The version of SLSA provenance builder to use'
         required: false
@@ -49,9 +54,9 @@ jobs:
       run: |
         set -euo pipefail
         gh -R slsa-framework/slsa-github-generator \
-          release download ${{ inputs.builder_version }} -p $BUILDER
-        chmod ug+x $BUILDER
-        COMPUTED_HASH=$(sha256sum $BUILDER | cut -d ' ' -f1)
+          release download ${{ inputs.builder_version }} -p ${{ inputs.builder }}
+        chmod ug+x ${{ inputs.builder }}
+        COMPUTED_HASH=$(sha256sum ${{ inputs.builder }} | cut -d ' ' -f1)
         EXPECTED_HASH="893dc33e91ed5200d2932832c99e1b28011cecb836728f9604a571f71cf4c1b4"
         if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
             echo "error: expected $EXPECTED_HASH, computed $COMPUTED_HASH"

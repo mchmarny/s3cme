@@ -1,4 +1,4 @@
-name: score
+name: security_score_analyze
 on:
   schedule:
     - cron: '15 */3 * * 2'
