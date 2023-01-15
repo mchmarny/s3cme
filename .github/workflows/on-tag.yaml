@@ -124,11 +124,10 @@ jobs:
       id: generate-builder
       uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
       with:
-        repository: "github.com/$GITHUB_REPOSITORY"
-        ref: "$GITHUB_REF"
+        repository: "slsa-framework/slsa-github-generator"
+        ref: "refs/tags/v1.4.0"
         go-version: 1.19
         binary: slsa-generator-container-linux-amd64
-        compile-builder: "true"
         directory: "internal/builders/container"
 
     - name: Create Provenance
