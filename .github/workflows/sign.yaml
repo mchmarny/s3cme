@@ -34,9 +34,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    outputs:
-      digest: ${{ steps.image.outputs.digest }}
+  sign:
     runs-on: ubuntu-latest
     permissions:
       actions: read
