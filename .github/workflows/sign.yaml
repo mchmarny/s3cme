@@ -75,7 +75,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign version
-        reg=$(echo ${{ env.IMAGE_DIGEST }} | cut -d/ -f1)
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Generate Key Pair
@@ -93,4 +93,4 @@ jobs:
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ env.RELEASE_VERSION }}
+            -a tag=${GITHUB_REF#refs/*/}
