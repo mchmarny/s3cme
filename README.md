@@ -45,6 +45,14 @@ terraform -chdir=./setup apply
    * `./policy/provenance.cue`
 1. Write some code, PR and tag as needed ;) 
 
+## Validation 
+
+Whenever you create a tag, and a new image is push to the registry with an SBOM, that image also has an attestation with the [image provenance](https://slsa.dev/provenance/v0.2), which traces it to its source in the repo (including the GitHub Actions that were used to generate it). Here is example of the provenance created on the image: 
+
+```json
+
+```
+
 ## Disclaimer
 
 This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
