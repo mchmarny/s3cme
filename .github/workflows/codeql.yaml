@@ -8,6 +8,8 @@ on:
     - main
   schedule:
     - cron: '24 8 * * 4'
+permissions:
+  contents: read
 jobs:
   analyze:
     name: Analyze
