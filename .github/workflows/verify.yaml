@@ -48,18 +48,12 @@ jobs:
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
-    - name: Capture Variables
-      run: |
-        set -euo pipefail
-        echo "REGISTRY=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)" >> $GITHUB_ENV
-
     - name: Auth Cosign
-      env:
-        REG_URI: $(echo ${{ inputs.image_digest }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login "${{ env.REGISTRY }}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Verify Image SLSA Provenance
       env:

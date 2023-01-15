@@ -80,12 +80,11 @@ jobs:
         cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
-      env:
-        REG_URI: $(echo ${{ inputs.image_digest }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Create SLSA Provenance
       env:

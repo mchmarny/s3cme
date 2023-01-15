@@ -89,7 +89,8 @@ jobs:
         AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
       run: |
         set -euo pipefail
-        echo "${AUTH_TOKEN}" | ko login ${{ env.REGISTRY }} --username oauth2accesstoken --password-stdin
+        reg=$(echo ${{ env.REGISTRY }} | cut -d/ -f1)
+        echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
@@ -128,7 +129,8 @@ jobs:
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REGISTRY }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        reg=$(echo ${{ env.REGISTRY }} | cut -d/ -f1)
+        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
       run: |
@@ -141,75 +143,17 @@ jobs:
             -a tag=${{ env.RELEASE_VERSION }}
 
   provenance:
-    runs-on: ubuntu-latest
     needs:
     - build
     permissions:
+      contents: read
       actions: read
       id-token: write
-      packages: write
-    steps:
-
-    - name: Install SLSA Provenance Builder
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set -euo pipefail
-        gh -R slsa-framework/slsa-github-generator \
-          release download ${{ env.BUILDER_VERSION }} -p $BUILDER
-        chmod ug+x $BUILDER
-        COMPUTED_HASH=$(sha256sum $BUILDER | cut -d ' ' -f1)
-        EXPECTED_HASH="893dc33e91ed5200d2932832c99e1b28011cecb836728f9604a571f71cf4c1b4"
-        if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
-            echo "error: expected $EXPECTED_HASH, computed $COMPUTED_HASH"
-            exit 1
-        fi
-
-    - name: Create Predicate
-      env:
-        GITHUB_CONTEXT: "${{ toJSON(github) }}"
-        COSIGN_EXPERIMENTAL: 1
-      run: |
-        set -euo pipefail
-        "./$BUILDER" generate --predicate ${{ env.PREDICATE_FILE }}
-
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ env.PROVIDER_ID }}
-        service_account: ${{ env.SA_EMAIL }}
-
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
-      with:
-        cosign-release: ${{ env.COSIGN_VERSION }}
-
-    - name: Capture Variables
-      run: |
-        set -euo pipefail
-        echo "REGISTRY=$(echo ${{ env.REG_URI }} | cut -d/ -f1)" >> $GITHUB_ENV
-
-    - name: Auth Cosign
-      env:
-        REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
-      run: |
-        set -euo pipefail
-        cosign version
-        cosign login "${{ env.REGISTRY }}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
-
-    - name: Create SLSA Provenance
-      env:
-        GITHUB_CONTEXT: "${{ toJSON(github) }}"
-        COSIGN_EXPERIMENTAL: 1
-      run: |
-        set -euo pipefail
-        cosign attest \
-          --predicate ${{ env.PREDICATE_FILE }} \
-          --type slsaprovenance \
-          --force \
-          ${{ needs.build.outputs.digest }}
+    uses: ./.github/workflows/provenance.yaml
+    with:
+      image_digest: ${{ needs.build.outputs.digest }}
+      auth_provider: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+      auth_user: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
 
   verify:
     needs:
