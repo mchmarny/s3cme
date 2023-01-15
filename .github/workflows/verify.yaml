@@ -67,5 +67,4 @@ jobs:
         cosign verify-attestation \
           --type slsaprovenance \
           --policy policy/provenance.cue \
-          --key ${{ inputs.kms_key }} \
           ${{ inputs.image_digest }}

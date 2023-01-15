@@ -73,6 +73,7 @@ jobs:
       run: |
         set -euo pipefail
         "./${{ inputs.builder }}" generate --predicate ${{ inputs.predicate_file }}
+        cat ${{ inputs.predicate_file }}
 
     - id: auth
       name: Auth GCP
@@ -102,5 +103,4 @@ jobs:
         cosign attest --force \
           --predicate ${{ inputs.predicate_file }} \
           --type slsaprovenance \
-          --key ${{ inputs.kms_key }} \
           ${{ inputs.image_digest }}
