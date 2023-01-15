@@ -216,5 +216,5 @@ jobs:
     uses: ./.github/workflows/verify.yaml
     with:
       image_digest: ${{ needs.build.outputs.digest }}
-      auth_provider: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
-      auth_user: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+      auth_provider: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
+      auth_user: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com

@@ -34,10 +34,12 @@ on:
         required: false
         type: string
         default: 'CRITICAL,HIGH,MEDIUM'
+    outputs:
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
 
 permissions:
   contents: read
-
 
 jobs:
   build:

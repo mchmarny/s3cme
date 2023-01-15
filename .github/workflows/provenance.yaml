@@ -50,7 +50,7 @@ jobs:
       run: |
         set -euo pipefail
         gh -R slsa-framework/slsa-github-generator \
-          release download ${{ input.builder_version }} -p $BUILDER
+          release download ${{ inputs.builder_version }} -p $BUILDER
         chmod ug+x $BUILDER
         COMPUTED_HASH=$(sha256sum $BUILDER | cut -d ' ' -f1)
         EXPECTED_HASH="893dc33e91ed5200d2932832c99e1b28011cecb836728f9604a571f71cf4c1b4"
@@ -65,20 +65,20 @@ jobs:
         COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        "./$BUILDER" generate --predicate ${{ input.predicate_file }}
+        "./$BUILDER" generate --predicate ${{ inputs.predicate_file }}
 
     - id: auth
       name: Auth GCP
       uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
       with:
         token_format: "access_token"
-        workload_identity_provider: ${{ input.auth_provider }}
-        service_account: ${{ input.auth_user }}
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
       with:
-        cosign-release: ${{ input.cosign_version }}
+        cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
       run: |
@@ -93,7 +93,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign attest \
-          --predicate ${{ input.predicate_file }} \
+          --predicate ${{ inputs.predicate_file }} \
           --type slsaprovenance \
           --force \
-          ${{ input.image_digest }}
+          ${{ inputs.image_digest }}
