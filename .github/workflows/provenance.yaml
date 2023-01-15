@@ -45,7 +45,6 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      packages: write
     steps:
 
     - name: Install SLSA Provenance Builder
