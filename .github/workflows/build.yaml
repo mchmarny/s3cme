@@ -19,25 +19,11 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
-      kms_key:
-        description: 'KMS key to use for signing'
-        required: true
-        type: string
-      cosign_version:
-        description: 'The version of cosign to use'
-        required: false
-        type: string
-        default: 'v1.13.1'
       go_version:
         description: 'Go version to use'
         required: false
         type: string
         default: '1.19.5'
-      scan_severity:
-        description: 'Error on vulnerability scan severity'
-        required: false
-        type: string
-        default: 'CRITICAL,HIGH,MEDIUM'
     outputs:
       digest:
         value: ${{ jobs.build.outputs.digest }}
@@ -117,40 +103,3 @@ jobs:
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
-
-    - name: Scan Image
-      uses: aquasecurity/trivy-action@9ab158e8597f3b310480b9a69402b419bc03dbd5  # 0.8.0
-      with:
-        scan-type: image
-        security-checks: vuln
-        severity: ${{ inputs.scan_severity }}
-        image-ref: ${{ env.IMAGE_DIGEST }}
-        format: sarif
-        output: trivy-results.sarif
-        hide-progress: true
-        timeout: "10m"
-        exit-code: "1"
-      env:
-        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
-
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
-      with:
-        cosign-release: ${{ inputs.cosign_version }}
-
-    - name: Auth Cosign
-      run: |
-        set -euo pipefail
-        cosign version
-        reg=$(echo ${{ env.IMAGE_DIGEST }} | cut -d/ -f1)
-        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
-
-    - name: Attest Image
-      run: |
-        set -euo pipefail
-        cosign sign ${{ env.IMAGE_DIGEST }} \
-            --key ${{ inputs.kms_key }} \
-            -a sha=${{ github.sha }} \
-            -a run_id=${{ github.run_id }} \
-            -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ env.RELEASE_VERSION }}

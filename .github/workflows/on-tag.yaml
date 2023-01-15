@@ -77,17 +77,32 @@ jobs:
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
-      cosign_version: ${{ needs.conf.outputs.cosign_version }}
       go_version: ${{ needs.conf.outputs.go_version }}
       image_name: ${{ needs.conf.outputs.image_name }}
       image_repo: ${{ needs.conf.outputs.registry_uri }}
+
+  sign:
+    needs:
+    - conf
+    - build
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+      packages: write
+    uses: ./.github/workflows/build.yaml
+    with:
+      auth_provider: ${{ needs.conf.outputs.provider_id }}
+      auth_user: ${{ needs.conf.outputs.service_account }}
+      cosign_version: ${{ needs.conf.outputs.cosign_version }}
+      image_digest: ${{ needs.build.outputs.digest }}
       kms_key: ${{ needs.conf.outputs.kms_key }}
       scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   provenance:
     needs:
     - conf
-    - build
+    - sign
     permissions:
       contents: read
       actions: read

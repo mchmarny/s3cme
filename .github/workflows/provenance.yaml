@@ -96,13 +96,11 @@ jobs:
 
     - name: Create SLSA Provenance
       env:
-        GITHUB_CONTEXT: "${{ toJSON(github) }}"
         COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        cosign attest \
+        cosign attest --force \
           --predicate ${{ inputs.predicate_file }} \
-          --key ${{ inputs.kms_key }} \
           --type slsaprovenance \
-          --force \
+          --key ${{ inputs.kms_key }} \
           ${{ inputs.image_digest }}
