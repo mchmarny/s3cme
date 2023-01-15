@@ -4,7 +4,11 @@ on:
   workflow_call:
     inputs:
       image_repo:
-        description: 'Fully-qualified image repo (registry/project/repo/image)'
+        description: 'Fully-qualified image repo (registry/project/repo)'
+        required: true
+        type: string
+      image_name:
+        description: 'Image name (e.g. my-image)'
         required: true
         type: string
       auth_provider:
@@ -88,21 +92,20 @@ jobs:
       uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
       with:
         token_format: "access_token"
-        workload_identity_provider: ${{ input.auth_provider }}
-        service_account: ${{ input.auth_user }}
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
       with:
-        cosign-release: ${{ input.cosign_version }}
+        cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
-      env:
-        REG_URI: $(echo ${{ inputs.image_repo }} | cut -d/ -f1)
       run: |
         set -euo pipefail
         cosign version
-        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Install ko
       uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
@@ -110,15 +113,15 @@ jobs:
     - name: Authenticate ko
       env:
         AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
-        REG_URI: $(echo ${{ inputs.image_repo }} | cut -d/ -f1)
       run: |
         set -euo pipefail
-        echo "${AUTH_TOKEN}" | ko login "${REG_URI}" --username oauth2accesstoken --password-stdin
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
       env:
-        KO_DOCKER_REPO: ${{ inputs.image_repo }}
+        KO_DOCKER_REPO: ${{ inputs.image_repo }}/${{ inputs.image_name }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |
@@ -132,7 +135,7 @@ jobs:
       with:
         scan-type: image
         security-checks: vuln
-        severity: ${{ input.scan-severity }}
+        severity: ${{ inputs.scan-severity }}
         image-ref: ${{ env.IMAGE_DIGEST }}
         format: sarif
         output: trivy-results.sarif
@@ -146,7 +149,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign sign ${{ env.IMAGE_DIGEST }} \
-            --key ${{ input.kms_key }} \
+            --key ${{ inputs.kms_key }} \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
