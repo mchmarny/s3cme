@@ -5,7 +5,7 @@ predicate: {
   }
   invocation: {
     configSource: {
-      entryPoint: ".github/workflows/generic-container.yml"
+      entryPoint: ".github/workflows/on-tag.yaml"
       uri: =~"^git\\+https://github.com/mchmarny/s3cme@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
     }
   }
