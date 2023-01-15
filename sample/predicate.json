@@ -1,0 +1,212 @@
+{
+    "builder": {
+        "id": "https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v0.3.11"
+    },
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
+    "invocation": {
+        "configSource": {
+            "uri": "git+https://github.com/mchmarny/s3cme@refs/tags/v0.3.11",
+            "digest": {
+                "sha1": "2c74ceec0440aa41d28469f1de5b7df57eedc875"
+            },
+            "entryPoint": ".github/workflows/on-tag.yaml"
+        },
+        "parameters": {},
+        "environment": {
+            "github_actor": "mchmarny",
+            "github_actor_id": "175854",
+            "github_base_ref": "",
+            "github_event_name": "push",
+            "github_event_payload": {
+                "after": "6efd5f99dbbba7dee812824d39ce5c54aa7ff1b9",
+                "base_ref": null,
+                "before": "0000000000000000000000000000000000000000",
+                "commits": [],
+                "compare": "https://github.com/mchmarny/s3cme/compare/v0.3.11",
+                "created": true,
+                "deleted": false,
+                "forced": false,
+                "head_commit": {
+                    "author": {
+                        "email": "mark@chmarny.com",
+                        "name": "Mark Chmarny",
+                        "username": "mchmarny"
+                    },
+                    "committer": {
+                        "email": "mark@chmarny.com",
+                        "name": "Mark Chmarny",
+                        "username": "mchmarny"
+                    },
+                    "distinct": true,
+                    "id": "2c74ceec0440aa41d28469f1de5b7df57eedc875",
+                    "message": "removes key",
+                    "timestamp": "2023-01-15T13:56:19-08:00",
+                    "tree_id": "85cf57232f8d13f802855cd776f1c9db9ead81ed",
+                    "url": "https://github.com/mchmarny/s3cme/commit/2c74ceec0440aa41d28469f1de5b7df57eedc875"
+                },
+                "pusher": {
+                    "email": "mchmarny@users.noreply.github.com",
+                    "name": "mchmarny"
+                },
+                "ref": "refs/tags/v0.3.11",
+                "repository": {
+                    "allow_forking": true,
+                    "archive_url": "https://api.github.com/repos/mchmarny/s3cme/{archive_format}{/ref}",
+                    "archived": false,
+                    "assignees_url": "https://api.github.com/repos/mchmarny/s3cme/assignees{/user}",
+                    "blobs_url": "https://api.github.com/repos/mchmarny/s3cme/git/blobs{/sha}",
+                    "branches_url": "https://api.github.com/repos/mchmarny/s3cme/branches{/branch}",
+                    "clone_url": "https://github.com/mchmarny/s3cme.git",
+                    "collaborators_url": "https://api.github.com/repos/mchmarny/s3cme/collaborators{/collaborator}",
+                    "comments_url": "https://api.github.com/repos/mchmarny/s3cme/comments{/number}",
+                    "commits_url": "https://api.github.com/repos/mchmarny/s3cme/commits{/sha}",
+                    "compare_url": "https://api.github.com/repos/mchmarny/s3cme/compare/{base}...{head}",
+                    "contents_url": "https://api.github.com/repos/mchmarny/s3cme/contents/{+path}",
+                    "contributors_url": "https://api.github.com/repos/mchmarny/s3cme/contributors",
+                    "created_at": 1673554057,
+                    "default_branch": "main",
+                    "deployments_url": "https://api.github.com/repos/mchmarny/s3cme/deployments",
+                    "description": "Sample repo with image build/publish, SBOM gen, SLSA provenance/verification using OIDC and Artifact Registry",
+                    "disabled": false,
+                    "downloads_url": "https://api.github.com/repos/mchmarny/s3cme/downloads",
+                    "events_url": "https://api.github.com/repos/mchmarny/s3cme/events",
+                    "fork": false,
+                    "forks": 0,
+                    "forks_count": 0,
+                    "forks_url": "https://api.github.com/repos/mchmarny/s3cme/forks",
+                    "full_name": "mchmarny/s3cme",
+                    "git_commits_url": "https://api.github.com/repos/mchmarny/s3cme/git/commits{/sha}",
+                    "git_refs_url": "https://api.github.com/repos/mchmarny/s3cme/git/refs{/sha}",
+                    "git_tags_url": "https://api.github.com/repos/mchmarny/s3cme/git/tags{/sha}",
+                    "git_url": "git://github.com/mchmarny/s3cme.git",
+                    "has_discussions": false,
+                    "has_downloads": true,
+                    "has_issues": true,
+                    "has_pages": false,
+                    "has_projects": false,
+                    "has_wiki": false,
+                    "homepage": "",
+                    "hooks_url": "https://api.github.com/repos/mchmarny/s3cme/hooks",
+                    "html_url": "https://github.com/mchmarny/s3cme",
+                    "id": 588304121,
+                    "is_template": true,
+                    "issue_comment_url": "https://api.github.com/repos/mchmarny/s3cme/issues/comments{/number}",
+                    "issue_events_url": "https://api.github.com/repos/mchmarny/s3cme/issues/events{/number}",
+                    "issues_url": "https://api.github.com/repos/mchmarny/s3cme/issues{/number}",
+                    "keys_url": "https://api.github.com/repos/mchmarny/s3cme/keys{/key_id}",
+                    "labels_url": "https://api.github.com/repos/mchmarny/s3cme/labels{/name}",
+                    "language": "HCL",
+                    "languages_url": "https://api.github.com/repos/mchmarny/s3cme/languages",
+                    "license": {
+                        "key": "apache-2.0",
+                        "name": "Apache License 2.0",
+                        "node_id": "MDc6TGljZW5zZTI=",
+                        "spdx_id": "Apache-2.0",
+                        "url": "https://api.github.com/licenses/apache-2.0"
+                    },
+                    "master_branch": "main",
+                    "merges_url": "https://api.github.com/repos/mchmarny/s3cme/merges",
+                    "milestones_url": "https://api.github.com/repos/mchmarny/s3cme/milestones{/number}",
+                    "mirror_url": null,
+                    "name": "s3cme",
+                    "node_id": "R_kgDOIxDO-Q",
+                    "notifications_url": "https://api.github.com/repos/mchmarny/s3cme/notifications{?since,all,participating}",
+                    "open_issues": 0,
+                    "open_issues_count": 0,
+                    "owner": {
+                        "avatar_url": "https://avatars.githubusercontent.com/u/175854?v=4",
+                        "email": "mchmarny@users.noreply.github.com",
+                        "events_url": "https://api.github.com/users/mchmarny/events{/privacy}",
+                        "followers_url": "https://api.github.com/users/mchmarny/followers",
+                        "following_url": "https://api.github.com/users/mchmarny/following{/other_user}",
+                        "gists_url": "https://api.github.com/users/mchmarny/gists{/gist_id}",
+                        "gravatar_id": "",
+                        "html_url": "https://github.com/mchmarny",
+                        "id": 175854,
+                        "login": "mchmarny",
+                        "name": "mchmarny",
+                        "node_id": "MDQ6VXNlcjE3NTg1NA==",
+                        "organizations_url": "https://api.github.com/users/mchmarny/orgs",
+                        "received_events_url": "https://api.github.com/users/mchmarny/received_events",
+                        "repos_url": "https://api.github.com/users/mchmarny/repos",
+                        "site_admin": false,
+                        "starred_url": "https://api.github.com/users/mchmarny/starred{/owner}{/repo}",
+                        "subscriptions_url": "https://api.github.com/users/mchmarny/subscriptions",
+                        "type": "User",
+                        "url": "https://api.github.com/users/mchmarny"
+                    },
+                    "private": false,
+                    "pulls_url": "https://api.github.com/repos/mchmarny/s3cme/pulls{/number}",
+                    "pushed_at": 1673819788,
+                    "releases_url": "https://api.github.com/repos/mchmarny/s3cme/releases{/id}",
+                    "size": 1530,
+                    "ssh_url": "git@github.com:mchmarny/s3cme.git",
+                    "stargazers": 0,
+                    "stargazers_count": 0,
+                    "stargazers_url": "https://api.github.com/repos/mchmarny/s3cme/stargazers",
+                    "statuses_url": "https://api.github.com/repos/mchmarny/s3cme/statuses/{sha}",
+                    "subscribers_url": "https://api.github.com/repos/mchmarny/s3cme/subscribers",
+                    "subscription_url": "https://api.github.com/repos/mchmarny/s3cme/subscription",
+                    "svn_url": "https://github.com/mchmarny/s3cme",
+                    "tags_url": "https://api.github.com/repos/mchmarny/s3cme/tags",
+                    "teams_url": "https://api.github.com/repos/mchmarny/s3cme/teams",
+                    "topics": [],
+                    "trees_url": "https://api.github.com/repos/mchmarny/s3cme/git/trees{/sha}",
+                    "updated_at": "2023-01-15T15:08:58Z",
+                    "url": "https://github.com/mchmarny/s3cme",
+                    "visibility": "public",
+                    "watchers": 0,
+                    "watchers_count": 0,
+                    "web_commit_signoff_required": true
+                },
+                "sender": {
+                    "avatar_url": "https://avatars.githubusercontent.com/u/175854?v=4",
+                    "events_url": "https://api.github.com/users/mchmarny/events{/privacy}",
+                    "followers_url": "https://api.github.com/users/mchmarny/followers",
+                    "following_url": "https://api.github.com/users/mchmarny/following{/other_user}",
+                    "gists_url": "https://api.github.com/users/mchmarny/gists{/gist_id}",
+                    "gravatar_id": "",
+                    "html_url": "https://github.com/mchmarny",
+                    "id": 175854,
+                    "login": "mchmarny",
+                    "node_id": "MDQ6VXNlcjE3NTg1NA==",
+                    "organizations_url": "https://api.github.com/users/mchmarny/orgs",
+                    "received_events_url": "https://api.github.com/users/mchmarny/received_events",
+                    "repos_url": "https://api.github.com/users/mchmarny/repos",
+                    "site_admin": false,
+                    "starred_url": "https://api.github.com/users/mchmarny/starred{/owner}{/repo}",
+                    "subscriptions_url": "https://api.github.com/users/mchmarny/subscriptions",
+                    "type": "User",
+                    "url": "https://api.github.com/users/mchmarny"
+                }
+            },
+            "github_head_ref": "",
+            "github_ref": "refs/tags/v0.3.11",
+            "github_ref_type": "tag",
+            "github_repository_id": "588304121",
+            "github_repository_owner": "mchmarny",
+            "github_repository_owner_id": "175854",
+            "github_run_attempt": "1",
+            "github_run_id": "3925469803",
+            "github_run_number": "70",
+            "github_sha1": "2c74ceec0440aa41d28469f1de5b7df57eedc875"
+        }
+    },
+    "metadata": {
+        "buildInvocationID": "3925469803-1",
+        "completeness": {
+            "parameters": true,
+            "environment": false,
+            "materials": false
+        },
+        "reproducible": false
+    },
+    "materials": [
+        {
+            "uri": "git+https://github.com/mchmarny/s3cme@refs/tags/v0.3.11",
+            "digest": {
+                "sha1": "2c74ceec0440aa41d28469f1de5b7df57eedc875"
+            }
+        }
+    ]
+}

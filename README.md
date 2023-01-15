@@ -49,10 +49,65 @@ terraform -chdir=./setup apply
 
 ## Validation 
 
-Whenever you create a tag, and a new image is push to the registry with an SBOM, that image also has an attestation with the [image provenance](https://slsa.dev/provenance/v0.2), which traces it to its source in the repo (including the GitHub Actions that were used to generate it). Here is example of the provenance created on the image: 
+Whenever you create a tag, and the resulting image is push to the registry with an SBOM, that image also has an attestation with the [SLSA provenance (v0.2)](https://slsa.dev/provenance/v0.2), which allows you to trace that image to its source in the repo (including the GitHub Actions that were used to generate it). To validate image provenance: 
+
+```shell
+COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+   --type slsaprovenance \
+   --policy policy/provenance.cue \
+   $IMAGE_DIGEST
+```
+
+> The `COSIGN_EXPERIMENTAL` variable is necessary to verify the image with the transparency log
+
+The terminal output of the above command will be lengthy, but here are the important bits: 
+
+```shell
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - Any certificates were verified against the Fulcio roots.
+Certificate subject: 
+   https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v0.3.11
+Certificate issuer URL:  https://token.actions.githubusercontent.com
+GitHub Workflow Trigger: push
+GitHub Workflow SHA: 2c74ceec0440aa41d28469f1de5b7df57eedc875
+GitHub Workflow Name: on_tag
+GitHub Workflow Trigger mchmarny/s3cme
+GitHub Workflow Ref: refs/tags/v0.3.11
+```
+
+There also JSON returned, which looks something like this (`payload` abbreviated): 
 
 ```json
+{
+   "payloadType": "application/vnd.in-toto+json",
+   "payload": "eyJfdHl...V19fQ==",
+   "signatures": [
+      {
+         "keyid": "",
+         "sig": "MEUCIQCl+9dSv9f9wqHTF9D6L1bizNJbrZwYz0oDtjQ1wiqmLwIgE1T1LpwVd5+lOnalkYzNftTup//6H9i6wKDoCNNhpeo="
+      }
+   ]
+}
+```
 
+The `payload` field (abbreviated) is the base64 encoded in-toto statment containing the predicate the GitHub Actions provenance job create for this image:
+
+```json
+{
+    "_type": "https://in-toto.io/Statement/v0.1",
+    "predicateType": "https://slsa.dev/provenance/v0.2",
+    "subject": [
+        {
+            "name": "us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme",
+            "digest": {
+                "sha256": "22080f8082e60e7f3ab745818e59c6f513464de23b53bbd28dc83c4936c27cbc"
+            }
+        }
+    ],
+    "predicate": {...}
+}
 ```
 
 ## Disclaimer
