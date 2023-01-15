@@ -90,7 +90,7 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: ./.github/workflows/build.yaml
+    uses: ./.github/workflows/sign.yaml
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
