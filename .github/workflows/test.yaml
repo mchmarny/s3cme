@@ -3,12 +3,12 @@ name: test
 on:
   workflow_call:
     inputs:
-      go-version:
+      go_version:
         description: 'Go version to use'
         required: false
         type: string
         default: ^1.19.5
-      scan-severity:
+      scan_severity:
         description: 'Error on vulnerability scan severity'
         required: false
         type: string
@@ -28,7 +28,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
       with:
-        go-version: ${{ inputs.go-version }}
+        go-version: ${{ inputs.go_version }}
 
     - run: go version
 
@@ -81,7 +81,7 @@ jobs:
         hide-progress: true
         format: 'sarif'
         output: 'trivy-results.sarif'
-        severity: ${{ inputs.scan-severity }}
+        severity: ${{ inputs.scan_severity }}
         exit-code: '1'
 
     - name: Unit Test

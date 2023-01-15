@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/test.yaml
     with:
       go_version: ${{ needs.conf.outputs.go_version }}
-      scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
+      scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   build:
     needs:
