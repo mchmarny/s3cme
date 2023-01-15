@@ -34,6 +34,7 @@ jobs:
     outputs:
       digest: ${{ steps.image.outputs.digest }}
       tag: ${{ steps.image.outputs.tag }}
+      auth_token: ${{ steps.token.outputs.auth_token }}
     runs-on: ubuntu-latest
     needs:
     - test
@@ -81,6 +82,12 @@ jobs:
         token_format: "access_token"
         workload_identity_provider: ${{ env.PROVIDER_ID }}
         service_account: ${{ env.SA_EMAIL }}
+
+    - name: Export Token
+      id: token
+      run: |
+        set -euo pipefail
+        echo "auth_token=${{ steps.auth.outputs.access_token }}" >> "$GITHUB_OUTPUT"
 
     - name: Install ko
       uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
@@ -134,7 +141,7 @@ jobs:
     - name: Attest Image
       run: |
         set -euo pipefail
-        cosign sign ${{ needs.build.outputs.digest }} \
+        cosign sign ${{ env.IMAGE_DIGEST }} \
             --key ${{ env.KMS_KEY }} \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
@@ -175,19 +182,11 @@ jobs:
         set -euo pipefail
         "./$BUILDER" generate --predicate ${{ env.PREDICATE_FILE }}
 
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ env.PROVIDER_ID }}
-        service_account: ${{ env.SA_EMAIL }}
-
     - name: Auth Cosign
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ needs.build.outputs.auth_token }}
 
     - name: Create SLSA Provenance
       env:
@@ -216,19 +215,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
 
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ env.PROVIDER_ID }}
-        service_account: ${{ env.SA_EMAIL }}
-
     - name: Auth Cosign
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ needs.build.outputs.auth_token }}
 
     - name: Verify Image SLSA Provenance
       env:
