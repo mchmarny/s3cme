@@ -1,0 +1,55 @@
+name: verify
+
+on:
+  workflow_call:
+    secrets:
+      auth_token:
+        description: 'Target registry auth token'
+        required: true
+    inputs:
+      image_digest:
+        description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
+        required: true
+        type: string
+      cosign_version:
+        description: 'The version of cosign to use'
+        required: false
+        type: string
+        default: 'v1.13.1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    needs:
+    - build
+    - provenance
+    permissions:
+      actions: read
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b  # v3.2.0
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
+      with:
+        cosign-release: ${{ input.cosign_version }}
+
+    - name: Auth Cosign
+      run: |
+        set -euo pipefail
+        cosign version
+        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ secrets.auth_token }}
+
+    - name: Verify Image SLSA Provenance
+      env:
+        COSIGN_EXPERIMENTAL: 1
+      run: |
+        set -euo pipefail
+        cosign verify-attestation \
+          --type slsaprovenance \
+          --policy policy/provenance.cue \
+          ${{ input.image_digest }}
