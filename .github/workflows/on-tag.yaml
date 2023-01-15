@@ -92,6 +92,7 @@ jobs:
       env:
         KO_DOCKER_REPO: ${{ env.REG_URI }}/${{ env.IMAGE_REG }}/${{ env.IMAGE_NAME }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
+        COSIGN_EXPERIMENTAL: "true"
       run: |
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }},latest
         echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
@@ -119,39 +120,64 @@ jobs:
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${{ env.RELEASE_VERSION }}
 
-  provenance:
-    needs:
-    - image
-    permissions:
-      actions: read
-      id-token: write
-      packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
-    secrets:
-      registry-password: ${{ needs.image.outputs.token }}
-    with:
-      image: "${{ needs.image.outputs.image }}"
-      digest: "${{ needs.image.outputs.digest }}"
-      registry-username: oauth2accesstoken
-      compile-generator: true
+    - name: Generate builder
+      id: generate-builder
+      uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+      with:
+        repository: "github.com/$GITHUB_REPOSITORY"
+        ref: "$GITHUB_REF"
+        go-version: 1.19
+        binary: slsa-generator-container-linux-amd64
+        compile-builder: "true"
+        directory: "internal/builders/container"
 
-  verify:
-    needs:
-    - image
-    - provenance
-    runs-on: ubuntu-latest
-    permissions: read-all
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-        with:
-          go-version: ^1.19.5
-      - name: Install SLSA Verifier
-        run: |
-          go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.0.1
-      - name: Verify assets
-        env:
-          IMG_DIGEST: "${{ needs.image.outputs.image_uri }}@${{ needs.image.outputs.image_digest }}"
-        run: |
-          set -euo pipefail
-          slsa-verifier verify-image "$IMG_DIGEST" --source-uri "github.com/$GITHUB_REPOSITORY"
+    - name: Create Provenance
+      id: sign-prov
+      env:
+        GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        COSIGN_EXPERIMENTAL: 1
+      run: |
+        set -euo pipefail
+        predicate_name="predicate.json"
+        "$GITHUB_WORKSPACE/slsa-generator-container-linux-amd64" generate --predicate="$predicate_name"
+        cosign attest --predicate="$predicate_name" \
+          --type slsaprovenance \
+          --force \
+          ${{ env.IMAGE_DIGEST }}
+
+  # provenance:
+  #   needs:
+  #   - image
+  #   permissions:
+  #     actions: read
+  #     id-token: write
+  #     packages: write
+  #   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9  # v1.4.0
+  #   secrets:
+  #     registry-password: ${{ needs.image.outputs.token }}
+  #   with:
+  #     image: "${{ needs.image.outputs.image }}"
+  #     digest: "${{ needs.image.outputs.digest }}"
+  #     registry-username: oauth2accesstoken
+  #     compile-generator: true
+
+  # verify:
+  #   needs:
+  #   - image
+  #   - provenance
+  #   runs-on: ubuntu-latest
+  #   permissions: read-all
+  #   steps:
+  #     - name: Setup Go
+  #       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+  #       with:
+  #         go-version: ^1.19.5
+  #     - name: Install SLSA Verifier
+  #       run: |
+  #         go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.0.1
+  #     - name: Verify assets
+  #       env:
+  #         IMG_DIGEST: "${{ needs.image.outputs.image_uri }}@${{ needs.image.outputs.image_digest }}"
+  #       run: |
+  #         set -euo pipefail
+  #         slsa-verifier verify-image "$IMG_DIGEST" --source-uri "github.com/$GITHUB_REPOSITORY"
