@@ -2,6 +2,8 @@
 
 Sample Go app repo with test (on push) and release (on tag) pipelines optimized for software supply chain security (S3C). Includes Terraform setup for [OpenID Connect](https://openid.net/connect/) (IODC) in GCP with Artifact Registry, and KMS service configuration.
 
+![](images/workflow.png)
+
 What's included in the PR qualification (on push), and release (on tag) pipelines:
 
 * On push:

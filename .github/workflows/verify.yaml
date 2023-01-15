@@ -59,6 +59,13 @@ jobs:
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
+    - name: Generate Key Pair
+      run: |
+        set -euo pipefail
+        if [ ! -f cosign.pub ]; then
+            cosign generate-key-pair --kms ${{ inputs.kms_key }}
+        fi
+
     - name: Verify Image SLSA Provenance
       env:
         COSIGN_EXPERIMENTAL: 1
