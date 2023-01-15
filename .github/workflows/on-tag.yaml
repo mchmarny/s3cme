@@ -4,8 +4,8 @@ on:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
 env:
-  
-  # Update these based on the Setup output 
+
+  # Update these based on the Setup output
   REG_URI: us-west1-docker.pkg.dev
   IMAGE_REG: cloudy-s3c/s3cme
   IMAGE_NAME: s3cme
@@ -13,7 +13,7 @@ env:
   PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
   KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
   PREDICATE_FILE: predicate.json
-  
+
   # Defaults
   COSIGN_VERSION: v1.13.1
   BUILDER_VERSION: v1.4.0
