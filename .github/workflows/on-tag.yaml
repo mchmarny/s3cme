@@ -12,11 +12,12 @@ env:
   SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
   PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
   KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
-  PREDICATE_FILE: predicate.json
 
   # Defaults
   COSIGN_VERSION: v1.13.1
+  BUILDER: slsa-generator-container-linux-amd64
   BUILDER_VERSION: v1.4.0
+  PREDICATE_FILE: predicate.json
   GO_VERSION: "1.19.5"
 
 jobs:
@@ -122,14 +123,20 @@ jobs:
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${{ env.RELEASE_VERSION }}
 
-    - name: Get SLSA Provenance Builder
-      uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
-      with:
-        repository: "slsa-framework/slsa-github-generator"
-        ref: "refs/tags/${{ env.BUILDER_VERSION }}"
-        go-version: ${{ env.GO_VERSION }}
-        binary: slsa-generator-container-linux-amd64
-        directory: "internal/builders/container"
+    - name: Install SLSA Provenance Builder
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -euo pipefail
+        gh -R slsa-framework/slsa-github-generator \
+          release download ${{ env.BUILDER_VERSION }} -p $BUILDER
+        chmod ug+x $BUILDER
+        COMPUTED_HASH=$(sha256sum $BUILDER | cut -d ' ' -f1)
+        EXPECTED_HASH="893dc33e91ed5200d2932832c99e1b28011cecb836728f9604a571f71cf4c1b4"
+        if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
+            echo "error: expected $EXPECTED_HASH, computed $COMPUTED_HASH"
+            exit 1
+        fi
 
     - name: Create Predicate
       env:
@@ -137,8 +144,7 @@ jobs:
         COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        "$GITHUB_WORKSPACE/slsa-generator-container-linux-amd64" generate \
-          --predicate ${{ env.PREDICATE_FILE }}
+        "./$BUILDER" generate --predicate ${{ env.PREDICATE_FILE }}
 
     - name: Create SLSA Provenance
       env:
@@ -159,5 +165,5 @@ jobs:
         set -euo pipefail
         cosign verify-attestation \
           --type slsaprovenance \
-          --policy policy.cue \
+          --policy policy/provenance.cue \
           ${{ env.IMAGE_DIGEST }}
