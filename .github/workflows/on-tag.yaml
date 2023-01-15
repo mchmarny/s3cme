@@ -89,12 +89,12 @@ jobs:
         REG_URI: $(echo ${{ env.REG_URI }} | cut -d/ -f1)
       run: |
         set -euo pipefail
-        echo "${AUTH_TOKEN}" | ko login "${REG_URI }" --username oauth2accesstoken --password-stdin
+        echo "${AUTH_TOKEN}" | ko login "${REG_URI}" --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
       env:
-        KO_DOCKER_REPO: ${{ env.REG_URI }}
+        KO_DOCKER_REPO: ${{ env.REG_URI }}/s3cme
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |

@@ -102,7 +102,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign version
-        cosign login ${{ env.REG_URI }} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login "${REG_URI}" --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Install ko
       uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
@@ -113,7 +113,7 @@ jobs:
         REG_URI: $(echo ${{ inputs.image_repo }} | cut -d/ -f1)
       run: |
         set -euo pipefail
-        echo "${AUTH_TOKEN}" | ko login ${{ env.REG_URI }} --username oauth2accesstoken --password-stdin
+        echo "${AUTH_TOKEN}" | ko login "${REG_URI}" --username oauth2accesstoken --password-stdin
 
     - name: Build Image
       id: image
