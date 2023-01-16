@@ -16,7 +16,7 @@ What's in the included workflow pipelines:
   * Sarif-formatted report for repo alerts
 * Release (`on-tag`):
   * Same test as on push
-  * Image build and registry push using ko with with SBOM generation 
+  * Image build and registry push using [ko](https://github.com/ko-build/ko) with with SBOM generation 
   * Image vulnerability scan using Trivy with max severity checks
   * Image signing using KMS key and attestation using cosign
   * SLSA provenance generation for GitHub workflow
