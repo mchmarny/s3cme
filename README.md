@@ -30,20 +30,21 @@ What's in the included workflow pipelines:
 
 ![](images/template.png)
 
-1. Clone the new repo locally and navigate into it
+1. Clone the new repo locally and navigate into it:
 
 ```shell
 git clone git@github.com:your-username/your-new-app-name.git
 cd your-new-app-name
 ```
 
-1. Run Terraform init
+1. Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup:
 
 ```shell
+tools/init-repo
 terraform -chdir=./setup init
 ```
 
-1. Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and its Service Account)
+1. Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account)
 
 ```shell
 terraform -chdir=./setup apply
@@ -66,11 +67,14 @@ When completed, Terraform will output the configuration values.
    * `REG_URI`
    * `SA_EMAIL`
 
-1. Update Go and CUE policy file references to your own repo:
+When completed, commit and push the updates to your repository: 
 
-   * `./go.mod:module`
-   * `./cmd/server/main.go`
-   * `./policy/provenance.cue`
+```shell
+git add --all
+git commit -m 'repo init'
+git push
+```
+
 
 1. Write some code ;)
 

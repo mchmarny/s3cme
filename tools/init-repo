@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# This script is used to initialize a new repository by 
+# replacing the placeholders in the template with the
+# values from the upstream repository.
+
+repo=$(git config --get remote.origin.url | cut -d: -f2 | cut -d. -f1)
+
+grep -RiIl --exclude=README.md --exclude-dir={.git,sample,tools} 'mchmarny/s3cme' |
+  xargs sed -i '' "s!mchmarny/s3cme!${repo}!g"
