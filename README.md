@@ -26,31 +26,31 @@ What's in the included workflow pipelines:
 
 ## Repo Usage 
 
-1. Use this template to create a new repo (green button)
+Use this template to create a new repo (green button)
 
 ![](images/template.png)
 
-1. Clone the new repo locally and navigate into it
+Clone the new repo locally and navigate into it
 
 ```shell
 git clone git@github.com:your-username/your-new-app-name.git
 cd your-new-app-name
 ```
 
-1. Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup
+Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup
 
 ```shell
 tools/init-repo
 terraform -chdir=./setup init
 ```
 
-1. Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account)
+Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account)
 
 ```shell
 terraform -chdir=./setup apply
 ```
 
-1. When promoted, provide
+When promoted, provide
 
    * `project_id` - GCP project ID
    * `location` - GCP region (e.g. `us-west1`)
@@ -59,7 +59,7 @@ terraform -chdir=./setup apply
 
 When completed, Terraform will output the configuration values.
 
-1. Update `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
+Update `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
 
    * `IMG_NAME`
    * `KMS_KEY`
@@ -79,11 +79,11 @@ git push --all
 
 ![](images/push.png)
 
-1. Trigger release pipeline
+### Trigger release pipeline
 
 The canonical version is stored in [.version](.version) file. Feel free to edit it (by default: `v0.0.1`). When done, trigger the release pipeline:
 
-> If you did edit the version, make sure to commit and push that change to the repo first.
+> If you did edit the version, make sure to commit and push that change to the repo first. You can also use `make tag` to automate the entire process.
 
 ```shell
 export VERSION=$(cat .version)
@@ -91,15 +91,15 @@ git tag -s -m "initial release" $VERSION
 git push origin $VERSION
 ```
 
-> You can also use `make tag` to automate the entire process.
-
-1. Monitor the pipeline 
+### Monitor the pipeline 
 
 Navigate to `/actions` in your repo to see the status of that release pipeline. Wait until all steps (aka jobs) competed (green). 
 
 > If any steps fail, click on them to see the cause. Fix it, commit/push changes to the repo, and tag a new release to re-trigger the pipeline again.
 
 ![](images/tag.png)
+
+### Review produced image
 
 When successfully completed, that pipeline will create an image. Navigate to the Artifact Registry to confirm the image was created. 
 
