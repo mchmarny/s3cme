@@ -1,6 +1,6 @@
 # s3cme
 
-Sample Go app repo with test (on push) and release (on tag) pipelines optimized for software supply chain security (S3C). Includes Terraform setup for [OpenID Connect](https://openid.net/connect/) (IODC) in GCP with Artifact Registry, and KMS service configuration.
+Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry and KMS on GCP with [OpenID Connect](https://openid.net/connect/) (IODC), so no need for service account keys or GitHub secrets. 
 
 ![](images/workflow.png)
 
@@ -11,46 +11,45 @@ Sample Go app repo with test (on push) and release (on tag) pipelines optimized 
 
 What's in the included workflow pipelines:
 
-* PR qualification (`on-push`):
-  * Source vulnerability scan using Trivy
-  * Sarif-formatted report for repo alerts
-* Release (`on-tag`):
-  * Same test as on push
-  * Image build and registry push using [ko](https://github.com/ko-build/ko) with with SBOM generation 
-  * Image vulnerability scan using Trivy with max severity checks
-  * Image signing using KMS key and attestation using cosign
-  * SLSA provenance generation for GitHub workflow
-  * SLSA provenance verification using cosign and CUE policy
-* On schedule
+* `on-push` - PR qualification
+  * Static code vulnerability scan using [trivy](https://github.com/aquasecurity/trivy)
+  * Repo security alerts based on sarif reports CodeQL scans
+* `on-tag` Release (container image build)
+  * Image build/push using [ko](https://github.com/ko-build/ko) (includes SBOM generation)
+  * Image vulnerability scan using [trivy](https://github.com/aquasecurity/trivy) with max severity checks parameter
+  * Image signing using [KMS key](https://cloud.google.com/security-key-management) and attestation using [cosign](https://github.com/sigstore/cosign)
+  * SLSA provenance generation using [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator)
+  * SLSA provenance verification using [cosign](https://github.com/sigstore/cosign) based on CUE policy
+* `on-schedule` - Repo hygiene
   * Semantic code analysis using CodeQL (every 4 hours)
 
 ## Repo Usage 
 
-Use this template to create a new repo (green button)
+Use this template to create a new repo (click the green button and follow the wizard)
 
 ![](images/template.png)
 
-Clone the new repo locally and navigate into it
+When done, clone your new repo locally, and navigate into it
 
 ```shell
-git clone git@github.com:your-username/your-new-app-name.git
-cd your-new-app-name
+git clone git@github.com:$GIT_HUB_USERNAME/$REPO_NAME.git
+cd $REPO_NAME
 ```
 
-Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup
+Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup.
 
 ```shell
 tools/init-repo
 terraform -chdir=./setup init
 ```
 
-Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account)
+Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account).
 
 ```shell
 terraform -chdir=./setup apply
 ```
 
-When promoted, provide
+When promoted, provide:
 
    * `project_id` - GCP project ID
    * `location` - GCP region (e.g. `us-west1`)
@@ -59,7 +58,7 @@ When promoted, provide
 
 When completed, Terraform will output the configuration values.
 
-Update `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
+Update `env` portion of the `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
 
    * `IMG_NAME`
    * `KMS_KEY`
@@ -81,7 +80,7 @@ git push --all
 
 ### Trigger release pipeline
 
-The canonical version is stored in [.version](.version) file. Feel free to edit it (by default: `v0.0.1`). When done, trigger the release pipeline:
+The canonical version of the entire repo is stored in [.version](.version) file. Feel free to edit it (by default: `v0.0.1`). When done, trigger the release pipeline:
 
 > If you did edit the version, make sure to commit and push that change to the repo first. You can also use `make tag` to automate the entire process.
 
@@ -93,7 +92,7 @@ git push origin $VERSION
 
 ### Monitor the pipeline 
 
-Navigate to `/actions` in your repo to see the status of that release pipeline. Wait until all steps (aka jobs) competed (green). 
+Navigate to `/actions` in your repo to see the status of that release pipeline. Wait until all steps (aka jobs) have completed (green). 
 
 > If any steps fail, click on them to see the cause. Fix it, commit/push changes to the repo, and tag a new release to re-trigger the pipeline again.
 
@@ -243,7 +242,7 @@ attestation keyless validation failed for authority authority-0 for us-west1-doc
 no matching attestations:
 ```
 
-This demonstrates how the policy-controller admission controller enforces SLSA provenance policy in your cluster based on verifiable supply-chain metadata from cosign.
+This demonstrates how the policy-controller admission controller enforces [SLSA provenance](https://slsa.dev/provenance/v0.2) policy in your cluster based on verifiable supply-chain metadata from [cosign](https://github.com/sigstore/cosign).
 
 ## Disclaimer
 
