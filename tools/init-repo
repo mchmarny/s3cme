@@ -6,7 +6,12 @@ set -euo pipefail
 # replacing the placeholders in the template with the
 # values from the upstream repository.
 
+# get the upstream user and repo name
 repo=$(git config --get remote.origin.url | cut -d: -f2 | cut -d. -f1)
 
+# update all references to the upstream repo
 grep -RiIl --exclude=README.md --exclude-dir={.git,sample,tools} 'mchmarny/s3cme' |
   xargs sed -i '' "s!mchmarny/s3cme!${repo}!g"
+
+# reset the version
+echo "v0.0.1" > .version

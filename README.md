@@ -30,14 +30,14 @@ What's in the included workflow pipelines:
 
 ![](images/template.png)
 
-1. Clone the new repo locally and navigate into it:
+1. Clone the new repo locally and navigate into it
 
 ```shell
 git clone git@github.com:your-username/your-new-app-name.git
 cd your-new-app-name
 ```
 
-1. Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup:
+1. Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup
 
 ```shell
 tools/init-repo
@@ -50,7 +50,7 @@ terraform -chdir=./setup init
 terraform -chdir=./setup apply
 ```
 
-1. When promoted, provide:
+1. When promoted, provide
 
    * `project_id` - GCP project ID
    * `location` - GCP region (e.g. `us-west1`)
@@ -72,14 +72,22 @@ When completed, commit and push the updates to your repository:
 ```shell
 git add --all
 git commit -m 'repo init'
-git push
+git push --all
 ```
 
+> The above push will trigger the `on-push` flow. You can navigate to the `/actions` in your repo to see the status of that pipeline. 
 
-1. Write some code ;)
+1. Trigger release pipeline
 
-* Create pull requests (PR) to execute the test workflow (`on-push`)
-* Create version tag to trigger the release workflow (`on-tag`)
+The canonical version is stored in [.version](.version) file. Feel free to edit it (by default: `v0.0.1`). When done, trigger the release pipeline:
+
+> If you did edit the version, make sure to commit and push that change to the repo first.
+
+```shell
+export VERSION=$(cat .version)
+git tag -s -m "initial release" $VERSION
+git push origin $VERSION
+```
 
 ## Provenance Verification  
 
