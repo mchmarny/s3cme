@@ -86,10 +86,9 @@ jobs:
     - conf
     - build
     permissions:
-      contents: write
+      contents: read
       actions: read
       id-token: write
-      packages: write
     uses: ./.github/workflows/sign.yaml
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
