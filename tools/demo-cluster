@@ -49,6 +49,7 @@ gcloud container clusters list \
     --filter="resourceLabels.demo:build" \
     --project $PROJECT_ID
 
+# cluster credentials
 gcloud container clusters get-credentials $CLUSTER_NAME \
     --project $PROJECT_ID \
     --zone $CLUSTER_ZONE

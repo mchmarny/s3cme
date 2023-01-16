@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 jobs:
-  sign:
+  scan:
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -65,6 +65,25 @@ jobs:
         exit-code: "1"
       env:
         GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
+
+  sign:
+    needs:
+    - scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      packages: write
+    steps:
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
