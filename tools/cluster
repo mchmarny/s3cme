@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# validation 
+gcloud=$(which gcloud)   || ( echo "gcloud not found" && exit 1 )
+
+if [[ -z "${PROJECT_ID}" ]]; then
+  echo "PROJECT_ID not set, 'export PROJECT_ID=YOUR-PROJECT'"
+  exit 1
+fi;
+
+if [[ -z "${REGION}" ]]; then
+  echo "REGION not set, 'export REGION=us-west1'"
+  exit 1
+fi;
+
+ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+if [[ -z "${ACCOUNT}" ]]; then
+  echo "Run 'gcloud auth login' to authenticate on GCP before running this script."
+  exit 1
+fi;
+
+# cluster variables
+export CLUSTER_NAME="s3c"
+export CLUSTER_NODE_MACHINE_TYPE="e2-medium"
+export CLUSTER_RELEASE_CHANNEL="rapid"
+export CLUSTER_SIZE="3"
+export CLUSTER_ZONE="${REGION}-c"
+
+# cluster creation
+gcloud beta container clusters create $CLUSTER_NAME \
+    --project $PROJECT_ID \
+    --zone $CLUSTER_ZONE \
+    --release-channel $CLUSTER_RELEASE_CHANNEL \
+    --machine-type $CLUSTER_NODE_MACHINE_TYPE \
+    --metadata disable-legacy-endpoints=true \
+    --scopes "https://www.googleapis.com/auth/cloud-platform" \
+    --num-nodes $CLUSTER_SIZE \
+    --logging=SYSTEM,WORKLOAD \
+    --monitoring=SYSTEM \
+    --enable-autoupgrade \
+    --enable-autorepair \
+    --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver \
+    --labels "demo=s3c,env=dev"
+
+# cluster status
+gcloud container clusters list \
+    --filter="resourceLabels.demo:build" \
+    --project $PROJECT_ID
+
+gcloud container clusters get-credentials $CLUSTER_NAME \
+    --project $PROJECT_ID \
+    --zone $CLUSTER_ZONE
+
+# policy-controller
+helm repo add sigstore https://sigstore.github.io/helm-charts
+helm repo update
+kubectl create namespace cosign-system
+helm install policy-controller -n cosign-system sigstore/policy-controller --devel
+
+# image policy 
+kubectl apply -f policy/cluster.yaml
+
+# namespace 
+kubectl create ns demo
+kubectl label ns demo policy.sigstore.dev/include=true

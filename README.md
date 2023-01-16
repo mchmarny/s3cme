@@ -63,6 +63,7 @@ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
 The terminal output of the above command will be lengthy, but here are the important bits: 
 
 ```shell
+will be validating against CUE policies: [policy/provenance.cue]
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
@@ -108,6 +109,36 @@ The `payload` field (abbreviated) is the base64 encoded in-toto statment contain
     ],
     "predicate": {...}
 }
+```
+
+## Cluster Image Policy
+
+Assuming you already configured sigstore admission controller in your Kubernetes cluster, you can now install [ClusterImagePolicy](policy/cluster.yaml) which will ensure that all images deployed into a namespace that has policy-controller admission controller enabled adheres to the [same policy](policy/provenance.cue) that we used to validate the iamge using release. 
+
+> See [tools/cluster](tools/cluster) for example how you can quickly create cluster and configure sigstore admission controller.
+
+To configure your namespace:
+
+```shell
+kubectl label namespace demo policy.sigstore.dev/include=true
+```
+
+Then, review the [policy/cluster.yaml](policy/cluster.yaml) file and update with your repo/workflow information (e.g. registry URI: `glob`, GitHub repo info: `subjectRegExp`, and attestation rule: `data`)
+
+> For data, you can just paste the rule from [policy/provenance.cue](policy/provenance.cue)
+
+When done, apply the policy to the configured namespace (e.g. `demo`)
+
+```shell
+kubectl apply -n demo -f policy/cluster.yaml
+```
+
+Now, you should see errors when deploying images that don't have SLSA attestation created by your release pipeline:
+
+```shell
+kubectl run test --image=nginxdemos/hello --port=8080
+Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: no matching policies: spec.containers[0].image
+index.docker.io/nginxdemos/hello@sha256:409564c3a1d194fcfd85cad7a231b61670ab6c40d04d80e86649d1fe7740436e
 ```
 
 ## Disclaimer
