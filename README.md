@@ -9,7 +9,7 @@ Sample Go app repo with test (on push) and release (on tag) pipelines optimized 
   * [Manual](#manual)
   * [In Cluster](#in-cluster)
 
-What's included in the included workflow pipelines:
+What's in the included workflow pipelines:
 
 * PR qualification (`on-push`):
   * Source vulnerability scan using Trivy
