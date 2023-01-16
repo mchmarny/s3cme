@@ -1,6 +1,6 @@
 # s3cme
 
-Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry and KMS on GCP with [OpenID Connect](https://openid.net/connect/) (IODC), so no need for service account keys or GitHub secrets. 
+Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry and KMS on GCP with [OpenID Connect](https://openid.net/connect/) (OIDC), so no need for service account keys or GitHub secrets. 
 
 ![](images/workflow.png)
 
