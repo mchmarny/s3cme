@@ -77,6 +77,8 @@ git push --all
 
 > The above push will trigger the `on-push` flow. You can navigate to the `/actions` in your repo to see the status of that pipeline. 
 
+![](images/push.png)
+
 1. Trigger release pipeline
 
 The canonical version is stored in [.version](.version) file. Feel free to edit it (by default: `v0.0.1`). When done, trigger the release pipeline:
@@ -88,6 +90,22 @@ export VERSION=$(cat .version)
 git tag -s -m "initial release" $VERSION
 git push origin $VERSION
 ```
+
+> You can also use `make tag` to automate the entire process.
+
+1. Monitor the pipeline 
+
+Navigate to `/actions` in your repo to see the status of that release pipeline. Wait until all steps (aka jobs) competed (green). 
+
+> If any steps fail, click on them to see the cause. Fix it, commit/push changes to the repo, and tag a new release to re-trigger the pipeline again.
+
+![](images/tag.png)
+
+When successfully completed, that pipeline will create an image. Navigate to the Artifact Registry to confirm the image was created. 
+
+https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION
+
+![](images/registry.png)
 
 ## Provenance Verification  
 
