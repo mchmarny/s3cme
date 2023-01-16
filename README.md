@@ -107,6 +107,8 @@ https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION
 
 ![](images/registry.png)
 
+The image is the line item tagged with version (e.g. `v0.4.0`). The other two OCI artifacts named with the image digest in the registry are signature (`.sig`) and attestation (`.att`).
+
 ## Provenance Verification  
 
 Whenever you tag a release in the repo and an image is push to the registry, that image has an "attached" attestation in a form of [SLSA provenance (v0.2)](https://slsa.dev/provenance/v0.2). This allows you to trace that image all the way to its source in the repo (including the GitHub Actions that were used to generate it). That ability for verifiable traceability is called provenance. 
