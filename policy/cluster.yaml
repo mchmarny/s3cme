@@ -4,28 +4,28 @@ metadata:
   name: slsa-attestation-image-policy
 spec:
   images:
-    - glob: us-west1-docker.pkg.dev/cloudy-s3c/s3cme/**
+  - glob: us-west1-docker.pkg.dev/cloudy-s3c/s3cme/**
   authorities:
-    - keyless:
-        url: https://fulcio.sigstore.dev
-        identities:
-          - issuer: https://token.actions.githubusercontent.com
-            subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-      attestations:
-        - name: must-have-slsa
-          predicateType: slsaprovenance
-          policy:
-            type: cue
-            data: |
-              predicateType: "https://slsa.dev/provenance/v0.2"
-              predicate: {
-                builder: {
-                  id: =~"^https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-                }
-                invocation: {
-                  configSource: {
-                    entryPoint: ".github/workflows/on-tag.yaml"
-                    uri: =~"^git\\+https://github.com/mchmarny/s3cme@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-                  }
-                }
+  - keyless:
+      url: https://fulcio.sigstore.dev
+      identities:
+      - issuer: https://token.actions.githubusercontent.com
+        subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/slsa.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    attestations:
+    - name: must-have-slsa
+      predicateType: slsaprovenance
+      policy:
+        type: cue
+        data: |
+          predicateType: "https://slsa.dev/provenance/v0.2"
+          predicate: {
+            builder: {
+              id: =~"^https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+            }
+            invocation: {
+              configSource: {
+                entryPoint: ".github/workflows/on-tag.yaml"
+                uri: =~"^git\\+https://github.com/mchmarny/s3cme@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
               }
+            }
+          }

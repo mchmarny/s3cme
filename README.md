@@ -4,52 +4,86 @@ Sample Go app repo with test (on push) and release (on tag) pipelines optimized 
 
 ![](images/workflow.png)
 
-What's included in the PR qualification (on push), and release (on tag) pipelines:
+* [Repo Usage](#usage)
+* [Provenance Verification](#provenance-verification)
+  * [Manual](#manual)
+  * [In Cluster](#in-cluster)
 
-* On push:
-  * Semantic code analysis using CodeQL
+What's included in the included workflow pipelines:
+
+* PR qualification (`on-push`):
   * Source vulnerability scan using Trivy
   * Sarif-formatted report for repo alerts
-* On tag:
+* Release (`on-tag`):
   * Same test as on push
   * Image build and registry push using ko with with SBOM generation 
   * Image vulnerability scan using Trivy with max severity checks
   * Image signing using KMS key and attestation using cosign
   * SLSA provenance generation for GitHub workflow
   * SLSA provenance verification using cosign and CUE policy
+* On scheule
+  * Semantic code analysis using CodeQL (every 4 hours)
 
-## Usage 
+## Repo Usage 
 
 1. Use this template to create a new repo (green button)
+
+![](images/template.png)
+
 1. Clone the new repo locally and navigate into it
+
+```shell
+git clone git@github.com:your-username/your-new-app-name.git
+cd your-new-app-name
+```
+
 1. Run Terraform init
+
 ```shell
 terraform -chdir=./setup init
 ```
-1. Apply the Terraform configuration
+
+1. Apply the Terraform configuration to create GCP resoruces (KMS ring/key, Artifact Registry repo, Workload Identity Pool and its Service Account)
+
 ```shell
 terraform -chdir=./setup apply
 ```
+
 1. When promoted, provide:
+
    * `project_id` - GCP project ID
-   * `location` - GCP region
-   * `git_repo` - Your qualified name of your repo (e.g. `username/repo`)
-   * `name` - your application name (e.g. the repo portion from `git_repo`)
-1. Update following in `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform
+   * `location` - GCP region (e.g. `us-west1`)
+   * `git_repo` - The qualified name of your repo (e.g. `username/repo`)
+   * `name` - Your application name (e.g. the repo portion from `git_repo`)
+
+When completed, Terraform will output the configuration values.
+
+1. Update `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
+
    * `IMG_NAME`
    * `KMS_KEY`
    * `PROVIDER_ID`
    * `REG_URI`
    * `SA_EMAIL`
+
 1. Update Go and CUE policy file references to your own repo:
+
    * `./go.mod:module`
    * `./cmd/server/main.go`
    * `./policy/provenance.cue`
-1. Write some code, PR and tag as needed ;) 
 
-## Validation 
+1. Write some code ;)
 
-Whenever you create a tag, and the resulting image is push to the registry with an SBOM, that image also has an attestation with the [SLSA provenance (v0.2)](https://slsa.dev/provenance/v0.2), which allows you to trace that image to its source in the repo (including the GitHub Actions that were used to generate it). To validate image provenance: 
+* Create pull requests (PR) to execute the test workflow (`on-push`)
+* Create version tag to trigger the release workflow (`on-tag`)
+
+## Provenance Verification  
+
+Whenever you tag a reelase in the repo and an image is push to the registry, that image has an "attached" attestation in a form of [SLSA provenance (v0.2)](https://slsa.dev/provenance/v0.2). This allows you to trace that image all the way to its source in the repo (including the GitHub Actions that were used to generate it). That ability for vereifiable tracabiluty is called provenance. 
+
+### Manual 
+
+To verify the provenance of an image that was geneerated by the `on-tag` pipeline manually:
 
 ```shell
 COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
@@ -58,27 +92,18 @@ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
    $IMAGE_DIGEST
 ```
 
-> The `COSIGN_EXPERIMENTAL` variable is necessary to verify the image with the transparency log
+> The `COSIGN_EXPERIMENTAL` environment variable is necessary to verify the image with the transparency log
 
-The terminal output of the above command will be lengthy, but here are the important bits: 
+The terminal output will include the checks that were executed as part of the validation, as well as information about subject (URI of the tag ref that triggered that workflow), with its SHA, name, and Ref.
 
 ```shell
-will be validating against CUE policies: [policy/provenance.cue]
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - Any certificates were verified against the Fulcio roots.
-Certificate subject: 
-   https://github.com/mchmarny/s3cme/.github/workflows/provenance.yaml@refs/tags/v0.3.11
-Certificate issuer URL:  https://token.actions.githubusercontent.com
-GitHub Workflow Trigger: push
-GitHub Workflow SHA: 2c74ceec0440aa41d28469f1de5b7df57eedc875
-GitHub Workflow Name: on_tag
-GitHub Workflow Trigger mchmarny/s3cme
-GitHub Workflow Ref: refs/tags/v0.3.11
 ```
 
-There also JSON returned, which looks something like this (`payload` abbreviated): 
+The output will also include JSON, which looks something like this (`payload` abbreviated): 
 
 ```json
 {
@@ -93,7 +118,7 @@ There also JSON returned, which looks something like this (`payload` abbreviated
 }
 ```
 
-The `payload` field (abbreviated) is the base64 encoded in-toto statment containing the predicate the GitHub Actions provenance job create for this image:
+The `payload` field (abbreviated) is the base64 encoded [in-toto statment](https://in-toto.io/) containing the predicate containing the GitHub Actions provenance:
 
 ```json
 {
@@ -111,34 +136,79 @@ The `payload` field (abbreviated) is the base64 encoded in-toto statment contain
 }
 ```
 
-## Cluster Image Policy
+### In Cluster
 
-Assuming you already configured sigstore admission controller in your Kubernetes cluster, you can now install [ClusterImagePolicy](policy/cluster.yaml) which will ensure that all images deployed into a namespace that has policy-controller admission controller enabled adheres to the [same policy](policy/provenance.cue) that we used to validate the iamge using release. 
+You can also verify the provenance of an image in your Kubernetes cluster.
 
-> See [tools/cluster](tools/cluster) for example how you can quickly create cluster and configure sigstore admission controller.
+> This assumes you already configured sigstore admission controller in your Kubernetes cluster. If not, you can use the provided [tools/demo-cluster](tools/demo-cluster) script to create cluster and configure sigstore policy-controller.
 
-To configure your namespace:
+First, rewview the [policy/cluster.yaml](policy/cluster.yaml) file, and make sure the glob pattern matches your Artifact Registry (`**` will match any charater). You can make this as specific as you want (e.g. any image in the project in specific region)
 
-```shell
-kubectl label namespace demo policy.sigstore.dev/include=true
+```yaml
+images:
+- glob: us-west1-docker.pkg.dev/cloudy-s3c/**
 ```
 
-Then, review the [policy/cluster.yaml](policy/cluster.yaml) file and update with your repo/workflow information (e.g. registry URI: `glob`, GitHub repo info: `subjectRegExp`, and attestation rule: `data`)
+Next, check the subject portion of the issuer identity (in this case, the SLSA workflow with the repo tag)
 
-> For data, you can just paste the rule from [policy/provenance.cue](policy/provenance.cue)
-
-When done, apply the policy to the configured namespace (e.g. `demo`)
-
-```shell
-kubectl apply -n demo -f policy/cluster.yaml
+```yaml
+identities:
+- issuer: https://token.actions.githubusercontent.com
+subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/slsa.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
 ```
 
-Now, you should see errors when deploying images that don't have SLSA attestation created by your release pipeline:
+Finally, the policy data that checks for `predicateType` on the image should include the content of the same policy ([policy/provenance.cue](policy/provenance.cue)) we've used during the SLSA verification udirng image release and in the above manual verification process. 
+
+```yaml
+policy:
+   type: cue
+   data: |
+     predicateType: "https://slsa.dev/provenance/v0.2"
+     ...
+```
+
+> Make sure the content is indented correctly
+
+When finished, apply the policy into the cluster:
 
 ```shell
-kubectl run test --image=nginxdemos/hello --port=8080
-Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: no matching policies: spec.containers[0].image
-index.docker.io/nginxdemos/hello@sha256:409564c3a1d194fcfd85cad7a231b61670ab6c40d04d80e86649d1fe7740436e
+kubectl apply -f policy/cluster.yaml
+```
+
+To verfy SLSA provnance on any namespace in your cluster, add a sigstore inclusion label to that namespace (e.g. `demo`):
+
+```shell
+kubectl label ns demo policy.sigstore.dev/include=true
+```
+
+Now, you should see an error when deploying images that don't have SLSA attestation created by your release pipeline:
+
+```shell
+kubectl run test --image=nginxdemos/hello -n demo
+```
+
+Will result in:
+
+```shell
+admission webhook "policy.sigstore.dev" denied the request
+validation failed: no matching policies: spec.containers[0].image
+index.docker.io/nginxdemos/hello@sha256:409564c3a1d1...
+```
+
+That policy failed because the image URI doesn't match the images glob we've specfied (`glob: us-west1-docker.pkg.dev/cloudy-s3c/s3cme/**`). How about if we try to deploy image that does:
+
+```shell
+kubectl run test -n demo --image us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d
+```
+
+Now the failure is on the SLSA plicy due to lack of verifiable attestations:
+
+```shell
+admission webhook "policy.sigstore.dev" denied the request:
+validation failed: failed policy: slsa-attestation-image-policy: spec.containers[0].image
+us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d 
+attestation keyless validation failed for authority authority-0 for us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d: 
+no matching attestations:
 ```
 
 ## Disclaimer

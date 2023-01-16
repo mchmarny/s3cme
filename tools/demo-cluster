@@ -60,9 +60,3 @@ helm repo update
 kubectl create namespace cosign-system
 helm install policy-controller -n cosign-system sigstore/policy-controller --devel
 
-# image policy 
-kubectl apply -f policy/cluster.yaml
-
-# namespace 
-kubectl create ns demo
-kubectl label ns demo policy.sigstore.dev/include=true
