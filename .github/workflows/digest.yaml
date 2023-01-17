@@ -3,6 +3,8 @@ name: digest_update
 on:
   schedule:
     - cron: "15 */3 * * *"
+permissions:
+  contents: read
 jobs:
   image-update:
     runs-on: ubuntu-latest
