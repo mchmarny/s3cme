@@ -69,7 +69,6 @@ jobs:
     - conf
     - test
     permissions:
-      contents: write
       actions: read
       id-token: write
       packages: write
