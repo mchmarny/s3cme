@@ -1,1 +1,1 @@
-defaultBaseImage: cgr.dev/chainguard/static:latest@sha256:d5d268bbf8d048636123da1c3a3ff97b13e32b46850b8311701c020ccac4265d
+defaultBaseImage: cgr.dev/chainguard/static:latest
