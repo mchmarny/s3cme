@@ -13,6 +13,6 @@ jobs:
       pull-requests: write
     steps:
     - uses: actions/checkout@v3
-    - uses: chainguard-dev/actions/digesta-bot@main
+    - uses: chainguard-dev/actions/digesta-bot@24611e635342e8de543de63dfcf569ad32fbb962
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
