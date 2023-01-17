@@ -108,6 +108,8 @@ https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION
 
 The image is the line item tagged with version (e.g. `v0.4.0`). The other two OCI artifacts named with the image digest in the registry are signature (`.sig`) and attestation (`.att`).
 
+You can now take the image digest and query sigstore transparency service (Rekor). Easiest way to do that is to use the Chainguard's [rekor-search-ui](https://github.com/chainguard-dev/rekor-search-ui). Here is the entry for [s3cme v0.4.4](https://rekor.tlog.dev/?hash=sha256:0e07d5c7ec2caaf2643c0e3604687b5a826c4e5a51bc8a26d99edb0979380d7d).
+
 ## Provenance Verification  
 
 Whenever you tag a release in the repo and an image is push to the registry, that image has an "attached" attestation in a form of [SLSA provenance (v0.2)](https://slsa.dev/provenance/v0.2). This allows you to trace that image all the way to its source in the repo (including the GitHub Actions that were used to generate it). That ability for verifiable traceability is called provenance. 
