@@ -1,0 +1,31 @@
+name: manage_stale_issues_pr
+
+on:
+  schedule:
+  - cron: '37 21 * * *'
+permissions:
+  contents: read
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/stale@6f05e4244c9a0b2ed3401882b05d701dd0a7289b  # v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: |-
+          This issue is stale because it has been open for 90 days with no
+          activity. It will automatically close after 30 more days of
+          inactivity. Keep fresh with the 'lifecycle/frozen' label.
+        stale-issue-label: 'lifecycle/stale'
+        exempt-issue-labels: 'lifecycle/frozen'
+        stale-pr-message: |-
+          This Pull Request is stale because it has been open for 90 days with
+          no activity. It will automatically close after 30 more days of
+          inactivity. Keep fresh with the 'lifecycle/frozen' label.
+        stale-pr-label: 'lifecycle/stale'
+        exempt-pr-labels: 'lifecycle/frozen'
+        days-before-stale: 90
+        days-before-close: 30
