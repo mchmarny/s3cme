@@ -84,6 +84,11 @@ jobs:
         severity: ${{ inputs.scan_severity }}
         exit-code: '1'
 
+    - name: Upload Report
+      uses: github/codeql-action/upload-sarif@515828d97454b8354517688ddc5b48402b723750  # v2.11.6
+      with:
+        sarif_file: 'trivy-results.sarif'
+
     - name: Unit Test
       run: |
         make test
@@ -92,7 +97,4 @@ jobs:
       with:
         flags: unittests  # optional
 
-    - name: Upload Report
-      uses: github/codeql-action/upload-sarif@515828d97454b8354517688ddc5b48402b723750  # v2.11.6
-      with:
-        sarif_file: 'trivy-results.sarif'
+
