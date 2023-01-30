@@ -13,7 +13,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-    - uses: thehanimo/pr-title-checker@e914bff8ab5e6f1a6a270da6954cd6bfd1d7f1fb  # v1.3.5
+    - uses: thehanimo/pr-title-checker@8464c95d2f82d7ab89496f544d48c799497c130b  # v1.3.6
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         pass_on_octokit_error: false
