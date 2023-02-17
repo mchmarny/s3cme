@@ -134,6 +134,13 @@ The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - Any certificates were verified against the Fulcio roots.
+Certificate subject:  https://github.com/mchmarny/s3cme/.github/workflows/slsa.yaml@refs/tags/v0.4.6
+Certificate issuer URL:  https://token.actions.githubusercontent.com
+GitHub Workflow Trigger: push
+GitHub Workflow SHA: b45abe317bd0f15cff899e709b2bcdaee4055c8f
+GitHub Workflow Name: on_tag
+GitHub Workflow Trigger mchmarny/s3cme
+GitHub Workflow Ref: refs/tags/v0.4.6
 ```
 
 The output will also include JSON, which looks something like this (`payload` abbreviated): 
