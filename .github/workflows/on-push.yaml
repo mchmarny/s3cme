@@ -16,7 +16,7 @@ jobs:
   conf:
     env:
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
-      GO_VERSION: "1.19.5"
+      GO_VERSION: "1.20.1"
 
     runs-on: ubuntu-latest
     permissions:

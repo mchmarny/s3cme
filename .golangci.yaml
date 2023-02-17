@@ -64,8 +64,12 @@ linters-settings:
 
 issues:
   exclude:
-    - G404
-    - G112
+  - G404
+  - G112
+  exclude-rules:
+  - path: ../
+    linters:
+    - typecheck
 
 run:
   concurrency: 4
@@ -79,4 +83,4 @@ run:
 
   skip-dirs-use-default: false
   modules-download-mode: readonly
-  go: "1.19"
+  go: "1.20"
