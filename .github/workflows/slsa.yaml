@@ -51,6 +51,9 @@ jobs:
       id-token: write
     steps:
 
+    # This is a workaround for SLSA generator reusable workflow not being able to use OIDC 
+    # token to authenticate to GCP Artifact Registry see:
+    # https://github.com/slsa-framework/slsa-github-generator/issues/1545
     - name: Install SLSA Provenance Builder
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
