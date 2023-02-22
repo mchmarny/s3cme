@@ -102,3 +102,10 @@ jobs:
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${GITHUB_REF#refs/*/}
+
+    - name: Attest Image
+      run: |
+        set -euo pipefail
+        cosign verify \
+          --key ${{ inputs.kms_key }} \
+          ${{ inputs.image_digest }}
