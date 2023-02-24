@@ -106,6 +106,6 @@ jobs:
     - name: Attest Image
       run: |
         set -euo pipefail
-        cosign verify \
+          cosign verify \
           --key ${{ inputs.kms_key }} \
           ${{ inputs.image_digest }}
