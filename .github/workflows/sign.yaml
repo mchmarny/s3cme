@@ -86,25 +86,25 @@ jobs:
         cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
-      run: |
+      run: |-
         set -euo pipefail
         cosign version
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
-      run: |
+      run: |-
         set -euo pipefail
         cosign generate-key-pair
         cosign sign ${{ inputs.image_digest }} \
             --key cosign.key \
+            --tlog-upload=true \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${GITHUB_REF##*/} \
-            -y
+            -a tag=${GITHUB_REF##*/}
 
     - name: Attest Image
-      run: |
+      run: |-
         set -euo pipefail
         cosign verify -y --key cosign.pub ${{ inputs.image_digest }}
