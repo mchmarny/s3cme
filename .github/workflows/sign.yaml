@@ -15,15 +15,11 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
-      kms_key:
-        description: 'KMS key to use for signing'
-        required: true
-        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
         type: string
-        default: 'v1.13.1'
+        default: 'v2.0.0'
       scan_severity:
         description: 'Error on vulnerability scan severity'
         required: false
@@ -82,7 +78,7 @@ jobs:
         service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
-      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
+      uses: sigstore/cosign-installer@77560e399fb1b0d50a89024c16dd3a908f8d44b5  # v3.0.0
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
@@ -97,7 +93,6 @@ jobs:
       run: |
         set -euo pipefail
         cosign sign ${{ inputs.image_digest }} \
-            --key ${{ inputs.kms_key }} \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
@@ -106,6 +101,4 @@ jobs:
     - name: Attest Image
       run: |
         set -euo pipefail
-          cosign verify \
-          --key ${{ inputs.kms_key }} \
-          ${{ inputs.image_digest }}
+        cosign verify ${{ inputs.image_digest }}

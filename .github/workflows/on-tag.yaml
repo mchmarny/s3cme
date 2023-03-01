@@ -13,7 +13,6 @@ jobs:
     env:
       # Update these based on the Setup output
       IMG_NAME: s3cme
-      KMS_KEY: gcpkms://projects/cloudy-s3c/locations/global/keyRings/s3cme-signer-ring/cryptoKeys/s3cme-signer/cryptoKeyVersions/1
       PROVIDER_ID: projects/510441318314/locations/global/workloadIdentityPools/s3cme-github-pool/providers/github-provider
       REG_URI: us-west1-docker.pkg.dev/cloudy-s3c/s3cme
       SA_EMAIL: s3cme-github-actions-user@cloudy-s3c.iam.gserviceaccount.com
@@ -33,7 +32,6 @@ jobs:
       err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
       go_version: ${{ steps.conf.outputs.go_version }}
       image_name: ${{ steps.conf.outputs.image_name }}
-      kms_key: ${{ steps.conf.outputs.kms_key }}
       provider_id: ${{ steps.conf.outputs.provider_id }}
       registry_uri: ${{ steps.conf.outputs.registry_uri }}
       service_account: ${{ steps.conf.outputs.service_account }}
@@ -47,7 +45,6 @@ jobs:
         echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
         echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
         echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
-        echo "kms_key=${{ env.KMS_KEY }}" >> $GITHUB_OUTPUT
         echo "provider_id=${{ env.PROVIDER_ID }}" >> $GITHUB_OUTPUT
         echo "registry_uri=${{ env.REG_URI }}" >> $GITHUB_OUTPUT
         echo "service_account=${{ env.SA_EMAIL }}" >> $GITHUB_OUTPUT
@@ -95,7 +92,6 @@ jobs:
       auth_user: ${{ needs.conf.outputs.service_account }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
-      kms_key: ${{ needs.conf.outputs.kms_key }}
       scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   slsa:
@@ -114,4 +110,3 @@ jobs:
       builder_version: ${{ needs.conf.outputs.builder_version }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
-      kms_key: ${{ needs.conf.outputs.kms_key }}
