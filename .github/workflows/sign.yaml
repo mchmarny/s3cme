@@ -99,7 +99,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign sign ${{ inputs.image_digest }} \
-            --key cosign.key \
+            --key cosign.pub \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
