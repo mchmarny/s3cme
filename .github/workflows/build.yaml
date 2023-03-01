@@ -95,6 +95,7 @@ jobs:
       env:
         KO_DOCKER_REPO: ${{ inputs.image_repo }}/${{ inputs.image_name }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
+        COSIGN_EXPERIMENTAL: "true"
       run: |
         set -euo pipefail
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}

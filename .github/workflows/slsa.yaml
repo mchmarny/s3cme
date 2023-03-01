@@ -15,11 +15,15 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
+      kms_key:
+        description: 'KMS key to use for signing'
+        required: true
+        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
         type: string
-        default: 'v2.0.0'
+        default: 'v1.13.1'
       builder:
         description: 'Name of the SLSA provenance builder to use'
         required: false
@@ -29,7 +33,7 @@ on:
         description: 'The version of SLSA provenance builder to use'
         required: false
         type: string
-        default: 'v1.5.0'
+        default: 'v1.4.0'
       predicate_file:
         description: 'The name of the predicate file to create'
         required: false
@@ -50,7 +54,6 @@ jobs:
     # This is a workaround for SLSA generator reusable workflow not being able to use OIDC
     # token to authenticate to GCP Artifact Registry see:
     # https://github.com/slsa-framework/slsa-github-generator/issues/1545
-    # on mac: shasum -a 256 slsa-generator-container-linux-amd64
     - name: Install SLSA Provenance Builder
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +63,7 @@ jobs:
           release download ${{ inputs.builder_version }} -p ${{ inputs.builder }}
         chmod ug+x ${{ inputs.builder }}
         COMPUTED_HASH=$(sha256sum ${{ inputs.builder }} | cut -d ' ' -f1)
-        EXPECTED_HASH="6d8b83327ac2134aa8760e1e4f9cd5d3fdbcb56599e39be2cd965f1e04aa8ede"
+        EXPECTED_HASH="893dc33e91ed5200d2932832c99e1b28011cecb836728f9604a571f71cf4c1b4"
         if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
             echo "error: expected $EXPECTED_HASH, computed $COMPUTED_HASH"
             exit 1
@@ -69,6 +72,7 @@ jobs:
     - name: Create Predicate
       env:
         GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
         "./${{ inputs.builder }}" generate --predicate ${{ inputs.predicate_file }}
@@ -83,7 +87,7 @@ jobs:
         service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
-      uses: sigstore/cosign-installer@77560e399fb1b0d50a89024c16dd3a908f8d44b5  # v3.0.0
+      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
@@ -95,9 +99,11 @@ jobs:
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Create SLSA Provenance
+      env:
+        COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        cosign attest \
+        cosign attest --force \
           --predicate ${{ inputs.predicate_file }} \
           --type slsaprovenance \
           ${{ inputs.image_digest }}
@@ -123,7 +129,7 @@ jobs:
         service_account: ${{ inputs.auth_user }}
 
     - name: Install Cosign
-      uses: sigstore/cosign-installer@77560e399fb1b0d50a89024c16dd3a908f8d44b5  # v3.0.0
+      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
@@ -135,6 +141,8 @@ jobs:
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Verify Image SLSA Provenance
+      env:
+        COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
         cosign verify-attestation \

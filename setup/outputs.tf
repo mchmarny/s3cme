@@ -19,3 +19,8 @@ output "PROVIDER_ID" {
   value       = google_iam_workload_identity_pool_provider.github_provider.name
   description = "Provider ID to use in Auth Actions."
 }
+
+output "KMS_KEY" {
+  value       = "gcpkms://${data.google_kms_crypto_key_version.version.name}"
+  description = "Cosign-formated KMS key path to use in Auth Actions."
+}
