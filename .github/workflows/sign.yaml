@@ -93,6 +93,7 @@ jobs:
       run: |
         set -euo pipefail
         cosign sign ${{ inputs.image_digest }} \
+            --key cosign.pub \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
@@ -101,4 +102,4 @@ jobs:
     - name: Attest Image
       run: |
         set -euo pipefail
-        cosign verify ${{ inputs.image_digest }}
+        cosign verify --key cosign.pub ${{ inputs.image_digest }}
