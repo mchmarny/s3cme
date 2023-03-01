@@ -100,7 +100,7 @@ jobs:
     - name: Create SLSA Provenance
       run: |
         set -euo pipefail
-        cosign attest \
+        cosign attest -y \
           --predicate ${{ inputs.predicate_file }} \
           --type slsaprovenance \
           ${{ inputs.image_digest }}

@@ -101,9 +101,10 @@ jobs:
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ GITHUB_REF#refs/*/ }}
+            -a tag=${{ GITHUB_REF#refs/*/ }} \
+            -y
 
     - name: Attest Image
       run: |
         set -euo pipefail
-        cosign verify --key cosign.pub ${{ inputs.image_digest }}
+        cosign verify -y --key cosign.pub ${{ inputs.image_digest }}
