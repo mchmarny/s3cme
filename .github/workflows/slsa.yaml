@@ -1,8 +1,5 @@
 name: slsa_provenance_create
 
-env:
-  COSIGN_PASSWORD: ""
-
 on:
   workflow_call:
     inputs:

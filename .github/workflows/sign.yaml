@@ -1,8 +1,5 @@
 name: sign_image
 
-env:
-  COSIGN_PASSWORD: ""
-
 on:
   workflow_call:
     inputs:
@@ -92,16 +89,21 @@ jobs:
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
+    - name: Gen Cosign Key
+      run: |
+        set -euo pipefail
+        RANDOM_PASS=$(head -c 12 /dev/urandom | base64)
+        env COSIGN_PASSWORD=$RANDOM_PASS cosign generate-key-pair
+
     - name: Attest Image
       run: |
         set -euo pipefail
-        cosign generate-key-pair
         cosign sign ${{ inputs.image_digest }} \
             --key cosign.key \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ GITHUB_REF#refs/*/ }}
+            -a tag=${GITHUB_REF#refs/*/}
 
     - name: Attest Image
       run: |
