@@ -83,7 +83,7 @@ jobs:
     - name: Install Cosign
       uses: sigstore/cosign-installer@77560e399fb1b0d50a89024c16dd3a908f8d44b5  # v3.0.0
       with:
-        cosign-release: '${{ inputs.cosign_version }}'
+        cosign-release: ${{ inputs.cosign_version }}
 
     - name: Auth Cosign
       run: |-
