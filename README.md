@@ -18,8 +18,8 @@ What's in the included workflow pipelines:
   * Image build/push using [ko](https://github.com/ko-build/ko) (includes SBOM generation)
   * Image vulnerability scan using [trivy](https://github.com/aquasecurity/trivy) with max severity checks parameter
   * Image signing using [KMS key](https://cloud.google.com/security-key-management) and attestation using [cosign](https://github.com/sigstore/cosign)
-  * SLSA provenance generation using [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator)
-  * SLSA provenance verification using [cosign](https://github.com/sigstore/cosign) based on CUE policy
+  * SLSA provenance generation using [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator)
+  * SLSA provenance verification using [slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier)
 * `on-schedule` - Repo hygiene
   * Semantic code analysis using CodeQL (every 4 hours)
 

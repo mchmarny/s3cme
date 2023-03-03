@@ -15,10 +15,6 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
-      kms_key:
-        description: 'KMS key to use for signing'
-        required: true
-        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
@@ -94,18 +90,22 @@ jobs:
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Attest Image
+      env:
+        COSIGN_EXPERIMENTAL: "true"
+        COSIGN_PASSWORD: ""
       run: |
         set -euo pipefail
+        cosign generate-key-pair
         cosign sign ${{ inputs.image_digest }} \
-            --key ${{ inputs.kms_key }} \
+            --key cosign.key \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${GITHUB_REF#refs/*/}
+            -a tag=${{ env.GITHUB_REF_NAME }}
 
     - name: Attest Image
       run: |
         set -euo pipefail
           cosign verify \
-          --key ${{ inputs.kms_key }} \
+          --key cosign.pub \
           ${{ inputs.image_digest }}
