@@ -76,7 +76,12 @@ jobs:
 
     - name: Setup gcloud
       uses: google-github-actions/setup-gcloud@v1
-      
+
+    # slsa-verifier verify-image without the --provenance-path option fails with:
+    # FAILED: SLSA verification failed: cannot retrieve sha256 of image: crane.Digest():
+    # GET https://us-west1-docker.pkg.dev/v2/token?scope=repository%3Acloudy-s3c%2Fs3cme%2Fs3cme%3Apull&service=:
+    # DENIED: Permission "artifactregistry.repositories.downloadArtifacts" denied on resource
+    # "projects/cloudy-s3c/locations/us-west1/repositories/s3cme" (or it may not exist)
     - name: Download SLSA Provenance
       run: |-
         gcloud artifacts docker images describe ${{ inputs.image_digest }} \
