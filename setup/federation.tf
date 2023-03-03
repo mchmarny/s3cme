@@ -6,9 +6,7 @@ locals {
   ci_roles = toset([
     "roles/artifactregistry.reader",
     "roles/artifactregistry.writer",
-    "roles/cloudkms.cryptoKeyEncrypterDecrypter",
-    "roles/cloudkms.publicKeyViewer",
-    "roles/cloudkms.signerVerifier",
+    "roles/containeranalysis.occurrences.viewer",
   ])
 }
 
