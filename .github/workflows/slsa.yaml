@@ -65,6 +65,15 @@ jobs:
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
     - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
+
     - name: Verify Image SLSA Provenance
       run: |-
         set -euo pipefail
