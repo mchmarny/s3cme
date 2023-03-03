@@ -49,4 +49,3 @@ jobs:
         slsa-verifier verify-image ${{ inputs.image_digest }} \
           --source-uri github.com/mchmarny/s3cme \
           --source-tag ${{ vars.GITHUB_REF_NAME }} \
-          
