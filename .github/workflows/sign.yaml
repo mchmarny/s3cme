@@ -89,13 +89,17 @@ jobs:
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
+    - name: Generate Keys
+      run: |
+        set -euo pipefail
+        COSIGN_PASSWORD=$(openssl rand -base64 12)
+        cosign generate-key-pair
+
     - name: Attest Image
       env:
         COSIGN_EXPERIMENTAL: "true"
-        COSIGN_PASSWORD: ""
       run: |
         set -euo pipefail
-        cosign generate-key-pair
         cosign sign ${{ inputs.image_digest }} \
             --force \
             --key cosign.key \

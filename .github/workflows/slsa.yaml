@@ -87,6 +87,7 @@ jobs:
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
+    # SLSA provenance verification using cosign and CUE policy.
     - name: Verify SLSA Provenance (cosign)
       env:
         COSIGN_EXPERIMENTAL: 1
@@ -99,6 +100,7 @@ jobs:
 
     - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
 
+    # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance (slsa-verifier)
       run: |-
         set -euo pipefail
