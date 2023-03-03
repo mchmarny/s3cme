@@ -42,8 +42,7 @@ jobs:
       id-token: write
     steps:
 
-    - uses: slsa-framework/slsa-verifier-installer@v2.0.1
-
+    - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
     - name: Verify Image SLSA Provenance
       run: |-
         set -euo pipefail
