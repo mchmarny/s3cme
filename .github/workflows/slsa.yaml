@@ -15,6 +15,11 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
+      cosign_version:
+        description: 'The version of cosign to use'
+        required: false
+        type: string
+        default: 'v1.13.1'
 
 permissions:
   contents: read
