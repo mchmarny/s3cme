@@ -104,6 +104,8 @@ jobs:
             -a tag=${{ env.GITHUB_REF_NAME }}
 
     - name: Attest Image
+      env:
+        COSIGN_EXPERIMENTAL: "true"
       run: |
         set -euo pipefail
           cosign verify \

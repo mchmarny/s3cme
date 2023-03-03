@@ -1,6 +1,6 @@
 # s3cme
 
-Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry and KMS on GCP with [OpenID Connect](https://openid.net/connect/) (OIDC), so no need for service account keys or GitHub secrets. 
+Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry on GCP with [OpenID Connect](https://openid.net/connect/) (OIDC), so no need for service account keys or GitHub secrets. 
 
 ![](images/workflow.png)
 
@@ -17,7 +17,7 @@ What's in the included workflow pipelines:
 * `on-tag` Release (container image build)
   * Image build/push using [ko](https://github.com/ko-build/ko) (includes SBOM generation)
   * Image vulnerability scan using [trivy](https://github.com/aquasecurity/trivy) with max severity checks parameter
-  * Image signing using [KMS key](https://cloud.google.com/security-key-management) and attestation using [cosign](https://github.com/sigstore/cosign)
+  * Image signing and attestation using [cosign](https://github.com/sigstore/cosign)
   * SLSA provenance generation using [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator)
   * SLSA provenance verification using [slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier)
 * `on-schedule` - Repo hygiene
@@ -43,7 +43,7 @@ tools/init-repo
 terraform -chdir=./setup init
 ```
 
-Apply the Terraform configuration to create GCP resources (KMS ring/key, Artifact Registry repo, Workload Identity Pool and the Service Account).
+Apply the Terraform configuration to create GCP resources (Artifact Registry repo, Workload Identity Pool and the Service Account).
 
 ```shell
 terraform -chdir=./setup apply
@@ -61,7 +61,6 @@ When completed, Terraform will output the configuration values.
 Update `env` portion of the `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
 
    * `IMG_NAME`
-   * `KMS_KEY`
    * `PROVIDER_ID`
    * `REG_URI`
    * `SA_EMAIL`
