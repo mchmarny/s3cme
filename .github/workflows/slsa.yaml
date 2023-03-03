@@ -74,11 +74,19 @@ jobs:
         workload_identity_provider: ${{ inputs.auth_provider }}
         service_account: ${{ inputs.auth_user }}
 
-    - name: Verify Image SLSA Provenance
-      env:
-        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
+    - name: Setup gcloud
+      uses: google-github-actions/setup-gcloud@v1
+      
+    - name: Download SLSA Provenance
+      run: |-
+        gcloud artifacts docker images describe ${{ inputs.image_digest }} \
+          --format json \
+          --show-provenance > provenance.json
+
+    - name: Verify SLSA Provenance
       run: |-
         set -euo pipefail
         slsa-verifier verify-image ${{ inputs.image_digest }} \
-          --source-uri github.com/mchmarny/s3cme \
+          --provenance-path provenance.json \
+          --source-uri https://github.com/mchmarny/s3cme \
           --source-tag ${{ env.RELEASE_VERSION }}
