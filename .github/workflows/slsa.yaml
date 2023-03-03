@@ -75,6 +75,8 @@ jobs:
         service_account: ${{ inputs.auth_user }}
 
     - name: Verify Image SLSA Provenance
+      env:
+        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
       run: |-
         set -euo pipefail
         slsa-verifier verify-image ${{ inputs.image_digest }} \
