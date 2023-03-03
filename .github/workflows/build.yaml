@@ -99,5 +99,10 @@ jobs:
       run: |
         set -euo pipefail
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
-        echo "IMAGE_DIGEST=$(cat .digest)" >> $GITHUB_ENV
-        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
+        # workaround for ko outputting tag and sha
+        # technically valid but gcloud container images describe doesn't like it
+        IMG_URI=$(cat .digest | cut -d: -f1)
+        IMG_SHA=$(cat .digest | cut -d@ -f2)
+        IMG_DIGEST="${IMG_URI}@${IMG_SHA}"
+        echo "IMAGE_DIGEST=$IMG_DIGEST" >> $GITHUB_ENV
+        echo "digest=$IMG_DIGEST" >> "$GITHUB_OUTPUT"
