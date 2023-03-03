@@ -1,7 +1,7 @@
 predicateType: "https://slsa.dev/provenance/v0.2"
 predicate: {
   builder: {
-    id: =~"^https://github.com/mchmarny/s3cme/.github/workflows/slsa.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    if: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
   }
   invocation: {
     configSource: {

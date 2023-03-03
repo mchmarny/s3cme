@@ -100,8 +100,6 @@ jobs:
     - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
 
     - name: Verify SLSA Provenance (slsa-verifier)
-      env:
-        GH_TOKEN: ${{ steps.auth.outputs.access_token }}
       run: |-
         set -euo pipefail
         slsa-verifier version
