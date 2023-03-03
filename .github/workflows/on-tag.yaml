@@ -107,11 +107,9 @@ jobs:
       contents: read
       actions: read
       id-token: write
+      packages: write
     uses: ./.github/workflows/slsa.yaml
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
-      builder_version: ${{ needs.conf.outputs.builder_version }}
-      cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.build.outputs.digest }}
-      kms_key: ${{ needs.conf.outputs.kms_key }}

@@ -15,30 +15,6 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
-      kms_key:
-        description: 'KMS key to use for signing'
-        required: true
-        type: string
-      cosign_version:
-        description: 'The version of cosign to use'
-        required: false
-        type: string
-        default: 'v1.13.1'
-      builder:
-        description: 'Name of the SLSA provenance builder to use'
-        required: false
-        type: string
-        default: slsa-generator-container-linux-amd64
-      builder_version:
-        description: 'The version of SLSA provenance builder to use'
-        required: false
-        type: string
-        default: 'v1.4.0'
-      predicate_file:
-        description: 'The name of the predicate file to create'
-        required: false
-        type: string
-        default: 'predicate.json'
 
 permissions:
   contents: read
@@ -66,35 +42,25 @@ jobs:
       id-token: write
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
-
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ inputs.auth_provider }}
-        service_account: ${{ inputs.auth_user }}
-
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b  # v2.8.1
-      with:
-        cosign-release: ${{ inputs.cosign_version }}
-
-    - name: Auth Cosign
+    # Expected hash from: https://github.com/slsa-framework/slsa-verifier/blob/main/SHA256SUM.md
+    - name: Install Verifier
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -euo pipefail
-        cosign version
-        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
-        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        gh -R slsa-framework/slsa-verifier release download v2.0.1 -p "slsa-verifier-linux-amd64"
+        chmod ug+x slsa-verifier-linux-amd64
+        COMPUTED_HASH=$(sha256sum slsa-verifier-linux-amd64 | cut -d ' ' -f1)
+        EXPECTED_HASH="ad4b408c43504d439827998c27ab4be1c44ff467ccb39b78da01568f8542b10e"
+        if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
+            echo "error: expected '${EXPECTED_HASH}', got '${COMPUTED_HASH}'"
+            exit 1
+        fi
 
     - name: Verify Image SLSA Provenance
-      env:
-        COSIGN_EXPERIMENTAL: 1
       run: |
         set -euo pipefail
-        cosign verify-attestation \
-          --type slsaprovenance \
-          --policy policy/provenance.cue \
-          ${{ inputs.image_digest }}
+        slsa-verifier verify-image ${{ inputs.image_digest }} \
+          --source-uri github.com/mchmarny/s3cme \
+          --source-tag ${{ vars.GITHUB_REF_NAME }} \
+          
