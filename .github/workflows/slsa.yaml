@@ -20,15 +20,32 @@ permissions:
   contents: read
 
 jobs:
+
+  conf:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.conf.outputs.image }}
+      digest: ${{ steps.conf.outputs.digest }}
+    steps:
+    - name: Export Config
+      id: conf
+      run: |
+        echo "image=$(echo ${{ inputs.image_digest }} | cut -d@ -f1)" >> $GITHUB_OUTPUT
+        echo "digest=$(echo ${{ inputs.image_digest }} | cut -d@ -f2)" >> $GITHUB_OUTPUT
+
   provenance:
+    needs:
+    - conf
     permissions:
       actions: read
       id-token: write
       packages: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
     with:
-      image: $(echo ${{ inputs.image_digest }} | cut -d@ -f1)
-      digest: $(echo ${{ inputs.image_digest }} | cut -d@ -f2)
+      image: ${{ needs.conf.outputs.image }}
+      digest: ${{ needs.conf.outputs.digest }}
       registry-username: ${{ github.actor }}
       gcp-workload-identity-provider: ${{ inputs.auth_provider }}
       gcp-service-account: ${{ inputs.auth_user }}
