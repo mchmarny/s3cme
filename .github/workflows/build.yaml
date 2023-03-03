@@ -90,6 +90,8 @@ jobs:
         set -euo pipefail
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
+    # Note: ko build image ref will include BOTH, the tag AND digest of the image.
+    # ThTechnically not well formed but most of the tools seem to parse it as digest.
     - name: Build Image
       id: image
       env:
@@ -99,10 +101,6 @@ jobs:
       run: |
         set -euo pipefail
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
-        # workaround for ko outputting tag and sha
-        # technically valid but gcloud container images describe doesn't like it
-        IMG_URI=$(cat .digest | cut -d: -f1)
-        IMG_SHA=$(cat .digest | cut -d@ -f2)
-        IMG_DIGEST="${IMG_URI}@${IMG_SHA}"
-        echo "IMAGE_DIGEST=$IMG_DIGEST" >> $GITHUB_ENV
-        echo "digest=$IMG_DIGEST" >> "$GITHUB_OUTPUT"
+        IMG_URI=$(cat .digest)
+        echo "IMAGE_DIGEST=$IMG_URI" >> $GITHUB_ENV
+        echo "digest=$IMG_URI" >> "$GITHUB_OUTPUT"

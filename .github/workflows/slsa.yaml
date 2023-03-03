@@ -59,8 +59,6 @@ jobs:
       id-token: write
     steps:
 
-    - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
-
     - id: auth
       name: Auth GCP
       uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
@@ -69,27 +67,36 @@ jobs:
         workload_identity_provider: ${{ inputs.auth_provider }}
         service_account: ${{ inputs.auth_user }}
 
-    - name: Setup gcloud
-      uses: google-github-actions/setup-gcloud@v1
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65  # v3.0.1
+      with:
+        cosign-release: ${{ inputs.cosign_version }}
 
-    # slsa-verifier verify-image without the --provenance-path option fails with:
-    # FAILED: SLSA verification failed: cannot retrieve sha256 of image: crane.Digest():
-    # GET https://us-west1-docker.pkg.dev/v2/token?scope=repository%3Acloudy-s3c%2Fs3cme%2Fs3cme%3Apull&service=:
-    # DENIED: Permission "artifactregistry.repositories.downloadArtifacts" denied on resource
-    # "projects/cloudy-s3c/locations/us-west1/repositories/s3cme" (or it may not exist)
-    - name: Download SLSA Provenance
+    - name: Auth Cosign
+      run: |
+        set -euo pipefail
+        cosign version
+        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
+        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+
+    - name: Verify SLSA Provenance (cosign)
+      env:
+        COSIGN_EXPERIMENTAL: 1
+      run: |
+        set -euo pipefail
+        cosign verify-attestation \
+          --type slsaprovenance \
+          --policy policy/provenance.cue \
+          ${{ inputs.image_digest }}
+
+    - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
+
+    - name: Verify SLSA Provenance (slsa-verifier)
+      env:
+        GH_TOKEN: ${{ steps.auth.outputs.access_token }}
       run: |-
         set -euo pipefail
-        REG_URI=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
-        gcloud auth configure-docker "$REG_URI"
-        gcloud artifacts docker images describe ${{ inputs.image_digest }} \
-          --format json \
-          --show-provenance > provenance.json
-
-    - name: Verify SLSA Provenance
-      run: |-
-        set -euo pipefail
+        slsa-verifier version
         slsa-verifier verify-image ${{ inputs.image_digest }} \
-          --provenance-path provenance.json \
           --source-uri "github.com/$GITHUB_REPOSITORY" \
           --source-tag "$GITHUB_REF_NAME"
