@@ -42,23 +42,10 @@ jobs:
       id-token: write
     steps:
 
-    # Expected hash from: https://github.com/slsa-framework/slsa-verifier/blob/main/SHA256SUM.md
-    - name: Install Verifier
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set -euo pipefail
-        gh -R slsa-framework/slsa-verifier release download v2.0.1 -p "slsa-verifier-linux-amd64"
-        chmod ug+x slsa-verifier-linux-amd64
-        COMPUTED_HASH=$(sha256sum slsa-verifier-linux-amd64 | cut -d ' ' -f1)
-        EXPECTED_HASH="ad4b408c43504d439827998c27ab4be1c44ff467ccb39b78da01568f8542b10e"
-        if [[ "$EXPECTED_HASH" != "$COMPUTED_HASH" ]];then
-            echo "error: expected '${EXPECTED_HASH}', got '${COMPUTED_HASH}'"
-            exit 1
-        fi
+    - uses: slsa-framework/slsa-verifier-installer@v2.0.1
 
     - name: Verify Image SLSA Provenance
-      run: |
+      run: |-
         set -euo pipefail
         slsa-verifier verify-image ${{ inputs.image_digest }} \
           --source-uri github.com/mchmarny/s3cme \
