@@ -63,6 +63,7 @@ jobs:
       run: |-
         set -euo pipefail
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        echo "REG_URI=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)" >> $GITHUB_ENV
 
     - uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
 
@@ -84,6 +85,7 @@ jobs:
     # "projects/cloudy-s3c/locations/us-west1/repositories/s3cme" (or it may not exist)
     - name: Download SLSA Provenance
       run: |-
+        gcloud auth configure-docker ${{ env.REG_URI }}
         gcloud artifacts docker images describe ${{ inputs.image_digest }} \
           --format json \
           --show-provenance > provenance.json
