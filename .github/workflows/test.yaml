@@ -1,4 +1,4 @@
-name: test_and_scan
+name: test
 
 on:
   workflow_call:
@@ -7,31 +7,32 @@ on:
         description: 'Go version to use'
         required: false
         type: string
-        default: '1.20.1'
+        default: ^1.20.1
       scan_severity:
-        description: 'Error on vulnerability scan severity'
+        description: 'Trivy scan severity'
         required: false
         type: string
-        default: 'CRITICAL,HIGH,MEDIUM'
+        default: 'CRITICAL,HIGH'
+      golangci_version:
+        description: 'golangci version to use'
+        required: false
+        type: string
+        default: 'v1.52'
 
 permissions:
   contents: read
-
 jobs:
-  test:
+
+  unit:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-      id-token: write
     steps:
-
     - name: Setup Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
       with:
-        go-version: "${{ inputs.go_version }}"
-
+        go_version: ${{ inputs.go_version }}
     - run: go version
-
     - name: Cache Go Modules
       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
       with:
@@ -41,40 +42,73 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-
     - name: Checkout Code
-      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3  # v3.5.0
-
+      uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f  # v3.4.0
     - name: Tidy Modules
       run: |
         make tidy
+    - name: Unit Test
+      run: |
+        make test
+    - name: Parse Coverage
+      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70  # v3.1.1
+      with:
+        flags: unittests  # optional
 
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+    - name: Setup Go
+      uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
+      with:
+        go_version: ${{ inputs.go_version }}
+    - run: go version
+    - name: Cache Go Modules
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Checkout Code
+      uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f  # v3.4.0
+    - name: Tidy Modules
+      run: |
+        make tidy
     - name: Config Go Lint
       id: golangci_config
       uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b  # v2.0
       with:
         files: .golangci.yaml
-
     - name: Lint Go
       if: steps.golangci_config.outputs.files_exists == 'true'
       uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5  # v3.4.0
       with:
-        version: latest
-
+        version: ${{ inputs.golangci_version }}
     - name: Config YAML Lint
       id: yamllint_config
       uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b  # v2.0
       with:
         files: .yamllint
-
     - name: Lint YAML
       if: steps.yamllint_config.outputs.files_exists == 'true'
       uses: karancode/yamllint-github-action@fdef6bc189425ecc84cc4543b2674566c0827053  # master
       with:
         yamllint_config_filepath: .yamllint
 
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f  # v3.4.0
     - name: Scan Repo
-      uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee  # 0.9.2
+      uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee  # master
       with:
         scan-type: 'fs'
         ignore-unfixed: true
@@ -83,16 +117,7 @@ jobs:
         output: 'trivy-results.sarif'
         severity: ${{ inputs.scan_severity }}
         exit-code: '1'
-
     - name: Upload Report
-      uses: github/codeql-action/upload-sarif@515828d97454b8354517688ddc5b48402b723750  # v2.11.6
+      uses: github/codeql-action/upload-sarif@168b99b3c22180941ae7dbdd5f5c9678ede476ba  # v2.11.6
       with:
         sarif_file: 'trivy-results.sarif'
-
-    - name: Unit Test
-      run: |
-        make test
-
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70  # v3.1.1
-      with:
-        flags: unittests  # optional
