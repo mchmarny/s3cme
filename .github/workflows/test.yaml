@@ -69,7 +69,7 @@ jobs:
 
     - name: Lint YAML
       if: steps.yamllint_config.outputs.files_exists == 'true'
-      uses: karancode/yamllint-github-action@c85ba571891f3a9571b9bb89a7e31d099f4fd4a1  # master
+      uses: karancode/yamllint-github-action@fdef6bc189425ecc84cc4543b2674566c0827053  # master
       with:
         yamllint_config_filepath: .yamllint
 
