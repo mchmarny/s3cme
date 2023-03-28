@@ -101,6 +101,4 @@ jobs:
       run: |
         set -euo pipefail
         ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
-        IMG_URI=$(cat .digest)
-        echo "IMAGE_DIGEST=$IMG_URI" >> $GITHUB_ENV
-        echo "digest=$IMG_URI" >> "$GITHUB_OUTPUT"
+        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
