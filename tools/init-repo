@@ -8,10 +8,16 @@ set -euo pipefail
 
 # get the upstream user and repo name
 repo=$(git config --get remote.origin.url | cut -d: -f2 | cut -d. -f1)
+name=$(echo $repo | cut -d/ -f2)
 
-# update all references to the upstream repo
-grep -RiIl --exclude=README.md --exclude-dir={.git,sample,tools} 'mchmarny/s3cme' |
-  xargs sed -i '' "s!mchmarny/s3cme!${repo}!g"
+# change the name of the command dir
+mv cmd/s3cme "cmd/${name}"
+
+# update all references to the upstream org/repo name
+grep -RiIl --exclude-dir={.git,tools} 's3cme' |
+  xargs sed -i '' \
+    -e  "s!mchmarny/s3cme!${repo}!g" \
+    -e "s/s3cme/${name}/g"
 
 # reset the version
 echo "v0.0.1" > .version
