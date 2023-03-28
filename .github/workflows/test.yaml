@@ -7,7 +7,7 @@ on:
         description: 'Go version to use'
         required: false
         type: string
-        default: ^1.20.1
+        default: '1.20.2'
       scan_severity:
         description: 'Trivy scan severity'
         required: false
@@ -17,7 +17,7 @@ on:
         description: 'golangci version to use'
         required: false
         type: string
-        default: 'v1.52'
+        default: v1.52
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
       with:
-        go_version: ${{ inputs.go_version }}
+        go-version: '${{ inputs.go_version }}'
     - run: go version
     - name: Cache Go Modules
       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
@@ -63,7 +63,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
       with:
-        go_version: ${{ inputs.go_version }}
+        go-version: '${{ inputs.go_version }}'
     - run: go version
     - name: Cache Go Modules
       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
