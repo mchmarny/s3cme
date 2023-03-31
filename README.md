@@ -257,6 +257,10 @@ no matching attestations:
 
 This demonstrates how the policy-controller admission controller enforces [SLSA provenance](https://slsa.dev/provenance/v0.2) policy in your cluster based on verifiable supply-chain metadata from [cosign](https://github.com/sigstore/cosign).
 
+## Deployment 
+
+Automation to bootstrap `s3cme` as a fully functional, multi-region, deployment on GCP are located in [deploy/README.md](deploy/README.md).
+
 ## Disclaimer
 
 This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
