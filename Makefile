@@ -1,5 +1,5 @@
 VERSION    :=$(shell cat .version)
-YAML_FILES :=$(shell find . -type f -regex ".*yaml" -print)
+YAML_FILES :=$(shell find . ! -path "./vendor/*" ! -path "./deploy/*" ! -path "./setup/*" -type f -regex ".*y*ml" -print)
 
 all: help
 
@@ -37,6 +37,7 @@ lint-yaml: ## Runs yamllint on all yaml files (brew install yamllint)
 .PHONY: lint-tf
 lint-tf: ## Runs terraform fmt on all terraform files
 	terraform -chdir=./setup fmt
+	terraform -chdir=./deploy fmt
 
 server: ## Runs uncompiled app 
 	LOG_LEVEL=debug go run cmd/server/main.go

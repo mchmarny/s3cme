@@ -1,6 +1,13 @@
-ignore: |
-  /vendor
-  .git
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+  - '.yamllint'
+
+ignore:
+  - vendor
+  - setup
+  - deploy
+  - .git
 
 rules:
   braces: enable
