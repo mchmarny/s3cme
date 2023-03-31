@@ -24,6 +24,8 @@ func (h *APIHandler) RootHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info().
 		Str("version", h.Version).
 		Str("handler", "root").
+		Str("method", r.Method).
+		Str("path", r.URL.Path).
 		Msg("handling api invocation...")
 
 	c := &APIResponse{
