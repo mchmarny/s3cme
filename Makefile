@@ -3,24 +3,24 @@ YAML_FILES :=$(shell find . ! -path "./vendor/*" ! -path "./deploy/*" ! -path ".
 
 all: help
 
+.PHONY: version
 version: ## Prints the current version
 	@echo $(VERSION)
-.PHONY: version
 
+.PHONY: tidy
 tidy: ## Updates the go modules and vendors all dependancies 
 	go mod tidy
 	go mod vendor
-.PHONY: tidy
 
+.PHONY: upgrade
 upgrade: ## Upgrades all dependancies 
 	go get -d -u ./...
 	go mod tidy
 	go mod vendor
-.PHONY: upgrade
 
+.PHONY: test
 test: tidy ## Runs unit tests
 	go test -count=1 -race -covermode=atomic -coverprofile=cover.out ./...
-.PHONY: test
 
 .PHONY: lint
 lint: lint-go lint-yaml lint-tf ## Lints the entire project 
@@ -39,19 +39,31 @@ lint-tf: ## Runs terraform fmt on all terraform files
 	terraform -chdir=./setup fmt
 	terraform -chdir=./deploy fmt
 
+.PHONY: build
+build: tidy ## Builds CLI binary
+	mkdir -p ./bin
+	CGO_ENABLED=0 go build -trimpath \
+	-ldflags="-w -s -X main.version=$(RELEASE_VERSION) \
+	-extldflags '-static'" -mod vendor \
+	-o bin/server cmd/server/main.go
+
+.PHONY: vulncheck
+vulncheck: ## Checks for soource vulnerabilities
+	govulncheck -test ./...
+
+.PHONY: server
 server: ## Runs uncompiled app 
 	LOG_LEVEL=debug go run cmd/server/main.go
-.PHONY: server
 
+.PHONY: tag
 tag: ## Creates release tag 
 	git tag -s -m "version bump to $(VERSION)" $(VERSION)
 	git push origin $(VERSION)
-.PHONY: tag
 
+.PHONY: tagless
 tagless: ## Delete the current release tag 
 	git tag -d $(VERSION)
 	git push --delete origin $(VERSION)
-.PHONY: tagless
 
 .PHONY: setup
 setup: ## Creates the GCP resources 
@@ -62,13 +74,13 @@ setup: ## Creates the GCP resources
 apply: ## Applies Terraform
 	terraform -chdir=./setup apply -auto-approve
 
+.PHONY: clean
 clean: ## Cleans bin and temp directories
 	go clean
 	rm -fr ./vendor
 	rm -fr ./bin
-.PHONY: clean
 
+.PHONY: help
 help: ## Display available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk \
 		'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-.PHONY: help
