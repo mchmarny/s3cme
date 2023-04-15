@@ -10,9 +10,6 @@ set -euo pipefail
 repo=$(git config --get remote.origin.url | cut -d: -f2 | cut -d. -f1)
 name=$(echo $repo | cut -d/ -f2)
 
-# change the name of the command dir
-mv cmd/s3cme "cmd/${name}"
-
 # update all references to the upstream org/repo name
 grep -RiIl --exclude-dir={.git,tools} 's3cme' |
   xargs sed -i '' \
