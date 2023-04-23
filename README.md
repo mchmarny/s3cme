@@ -82,7 +82,7 @@ When successfully completed, that pipeline will create an image. Navigate to the
 
 https://github.com/mchmarny/s3cme/pkgs/container/s3cme
 
-![](images/registry.png)
+![](images/reglist.png)
 
 The image is the line item tagged with version (e.g. `latest`). The other three OCI artifacts named with the image digest in the registry are:
 
