@@ -19,8 +19,6 @@ permissions:
 jobs:
 
   sign:
-    needs:
-    - scan
     runs-on: ubuntu-latest
     permissions:
       actions: read
