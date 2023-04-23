@@ -11,19 +11,19 @@ spec:
       identities:
       - issuer: https://token.actions.githubusercontent.com
         subjectRegExp: "^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-      # - issuerRegExp: ".*"
-      #   subjectRegExp: ".*"
+      # - issuer: "https://token.actions.githubusercontent.com"
+      #   subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/on-tag.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
     attestations:
 
     # - name: must-have-spdx-sbom
-    #   predicateType: "https://spdx.dev/Document"
+    #   predicateType: https://spdx.dev/Document
     #   policy:
     #     type: cue
     #     data: |
     #       predicateType: "https://spdx.dev/Document"
 
     - name: must-have-slsa
-      predicateType: "https://slsa.dev/provenance/v0.2"
+      predicateType: https://slsa.dev/provenance/v0.2
       policy:
         type: cue
         data: |
