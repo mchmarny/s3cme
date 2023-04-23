@@ -1,4 +1,4 @@
-name: slsa_provenance_create
+name: slsa
 
 on:
   workflow_call:
