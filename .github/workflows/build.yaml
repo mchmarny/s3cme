@@ -83,6 +83,7 @@ jobs:
           --image-refs .digest \
           --bare \
           --tags ${{ env.RELEASE_VERSION }} \
+          --tags ${{ github.sha }} \
           --tags latest
           
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
