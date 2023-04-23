@@ -56,6 +56,10 @@ jobs:
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
+    - name: Check Cosign
+      run: |
+        cosign version
+
     - name: Auth Cosign
       run: |
         cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
@@ -76,6 +80,6 @@ jobs:
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${{ env.GITHUB_REF_NAME }}
 
-    - name: Attest Signature
+    - name: Verify Signature
       run: |
         cosign verify --key cosign.pub ${{ inputs.image_digest }}
