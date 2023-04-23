@@ -82,5 +82,7 @@ jobs:
         ko build internal/cmd/main.go \
           --image-refs .digest \
           --bare \
-          --tags ${{ env.RELEASE_VERSION }},latest
+          --tags ${{ env.RELEASE_VERSION }} \
+          --tags latest
+          
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
