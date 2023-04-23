@@ -172,12 +172,12 @@ images:
 - glob: ghcr.io/mchmarny/**
 ```
 
-Next, check the subject portion of the issuer identity (in this case, the SLSA workflow with the repo tag)
+Next, check the subject portion of the issuer identity (in this case, the SLSA generator workflow for containers, with the repo tag)
 
 ```yaml
 identities:
 - issuer: https://token.actions.githubusercontent.com
-subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/slsa.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+  subjectRegExp: "^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
 ```
 
 Finally, the policy data that checks for `predicateType` on the image should include the content of the same policy ([policy/provenance.cue](policy/provenance.cue)) we've used during the SLSA verification using image release and in the above manual verification process. 
@@ -213,25 +213,33 @@ kubectl run test --image=nginxdemos/hello -n demo
 Will result in:
 
 ```shell
-admission webhook "policy.sigstore.dev" denied the request
-validation failed: no matching policies: spec.containers[0].image
-index.docker.io/nginxdemos/hello@sha256:409564c3a1d1...
+admission webhook "policy.sigstore.dev" denied the request: validation failed: no matching policies: spec.containers[0].image
+index.docker.io/nginxdemos/hello@sha256:46bd594006f4bacc8a6c1cc2941ef842caf2358bc258619f7bea1558bc461b38
 ```
 
-That policy failed because the image URI doesn't match the images glob we've specified (`glob: ghcr.io/mchmarny/**`). How about if we try to deploy image that does:
+That policy failed because the image URI doesn't match the images glob we've specified (`glob: ghcr.io/mchmarny/**`). How about if we try to deploy image that does, but does not have SLSA attestation:
 
 ```shell
-kubectl run test -n demo --image ghcr.io/mchmarny/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d
+kubectl run test -n demo --image ghcr.io/mchmarny/s3cme-no-slsa@sha256:0d8b8a9e3635545476b880612d5a058616d7ac378b79b67ad412e9a9c11e7e45
 ```
 
 Now the failure is on the SLSA policy due to lack of verifiable attestations:
 
 ```shell
-admission webhook "policy.sigstore.dev" denied the request:
-validation failed: failed policy: slsa-attestation-image-policy: spec.containers[0].image
-us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d 
-attestation keyless validation failed for authority authority-0 for us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d: 
-no matching attestations:
+admission webhook "policy.sigstore.dev" denied the request: validation failed: failed policy: slsa-attestation-image-policy: spec.containers[0].image
+ghcr.io/mchmarny/s3cme@sha256:c85cdbb4cff81cd12f12af9cc7da4929f1b653a55896501e18755674739403fa attestation keyless validation failed for authority authority-0 for ghcr.io/mchmarny/s3cme@sha256:0d8b8a9e3635545476b880612d5a058616d7ac378b79b67ad412e9a9c11e7e45: no matching attestations:
+```
+
+Finally deploy image form the trusted registry and with SLSA attestation: 
+
+```shell
+kubectl run test -n demo --image ghcr.io/mchmarny/s3cme@sha256:c85cdbb4cff81cd12f12af9cc7da4929f1b653a55896501e18755674739403fa
+```
+
+Now, the response is simple: 
+
+```shell
+pod/test created
 ```
 
 This demonstrates how the policy-controller admission controller enforces [SLSA provenance](https://slsa.dev/provenance/v0.2) policy in your cluster based on verifiable supply-chain metadata from [cosign](https://github.com/sigstore/cosign).

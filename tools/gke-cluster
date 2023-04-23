@@ -46,7 +46,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
 
 # cluster status
 gcloud container clusters list \
-    --filter="resourceLabels.demo:build" \
+    --filter="resourceLabels.demo:s3cme" \
     --project $PROJECT_ID
 
 # cluster credentials
