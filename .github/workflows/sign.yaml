@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      packages: write
     steps:
 
     - name: Install Cosign

@@ -1,6 +1,6 @@
 # s3cme
 
-Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C). Includes Terraform setup for Artifact Registry on GCP with [OpenID Connect](https://openid.net/connect/) (OIDC), so no need for service account keys or GitHub secrets. 
+Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C).
 
 ![](images/workflow.png)
 
@@ -36,34 +36,11 @@ git clone git@github.com:$GIT_HUB_USERNAME/$REPO_NAME.git
 cd $REPO_NAME
 ```
 
-Initialize your new repo. This will update all the references to your newly clone GitHub repository and initialize the Terraform setup.
+Initialize your new repo. This will update all the references to your newly clone GitHub repository.
 
 ```shell
 tools/init-repo
-terraform -chdir=./setup init
 ```
-
-Apply the Terraform configuration to create GCP resources (Artifact Registry repo, Workload Identity Pool and the Service Account).
-
-```shell
-terraform -chdir=./setup apply
-```
-
-When promoted, provide:
-
-   * `project_id` - GCP project ID
-   * `location` - GCP region (e.g. `us-west1`)
-   * `git_repo` - The qualified name of your repo (e.g. `username/repo`)
-   * `name` - Your application name (e.g. the repo portion from `git_repo`)
-
-When completed, Terraform will output the configuration values.
-
-Update `env` portion of the `conf` job in `.github/workflows/on-tag.yaml` file to the values output by Terraform:
-
-   * `IMG_NAME`
-   * `PROVIDER_ID`
-   * `REG_URI`
-   * `SA_EMAIL`
 
 When completed, commit and push the updates to your repository: 
 
@@ -99,7 +76,7 @@ Navigate to `/actions` in your repo to see the status of that release pipeline. 
 
 ### Review produced image
 
-When successfully completed, that pipeline will create an image. Navigate to the Artifact Registry to confirm the image was created. 
+When successfully completed, that pipeline will create an image. Navigate to the registry to confirm the image was created.
 
 https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION
 
