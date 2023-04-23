@@ -84,7 +84,11 @@ https://github.com/mchmarny/s3cme/pkgs/container/s3cme
 
 ![](images/registry.png)
 
-The image is the line item tagged with version (e.g. `latest`). The other two OCI artifacts named with the image digest in the registry are the signature (`.sig`), and attestations (`.att`).
+The image is the line item tagged with version (e.g. `latest`). The other three OCI artifacts named with the image digest in the registry are:
+
+* `.sig` - cosign signature
+* `.att` - SLSA attestations
+* `.sbom` - SBOM (SPDX v2.3)
 
 You can now take the image digest and query sigstore transparency service (Rekor). Easiest way to do that is to use the Chainguard's [rekor-search-ui](https://github.com/chainguard-dev/rekor-search-ui). Here is the entry for [s3cme v0.6.35](https://search.sigstore.dev/?hash=sha256:c85cdbb4cff81cd12f12af9cc7da4929f1b653a55896501e18755674739403fa).
 
