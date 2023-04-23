@@ -3,10 +3,6 @@ name: build_image
 on:
   workflow_call:
     inputs:
-      registry_name:
-        description: 'Registry URI (e.g. username portion of ghcr.io/username)'
-        required: true
-        type: string
       image_name:
         description: 'Image name (e.g. my-image)'
         required: true
@@ -74,7 +70,7 @@ jobs:
       id: image
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        KO_DOCKER_REPO: ghcr.io/${{ inputs.registry_name }}/${{ inputs.image_name }}
+        KO_DOCKER_REPO: ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |

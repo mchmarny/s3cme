@@ -12,34 +12,26 @@ jobs:
   conf:
     env:
       # Update as needed
-      REG_NAME: mchmarny
       IMG_NAME: s3cme
-
-      # Defaults
-      BUILDER_VERSION: v1.4.0
+      GO_VERSION: '1.20.3'
       COSIGN_VERSION: v2.0.1
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
-      GO_VERSION: '1.20.3'
 
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
-      builder_version: ${{ steps.conf.outputs.builder_version }}
       cosign_version: ${{ steps.conf.outputs.cosign_version }}
       err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
       go_version: ${{ steps.conf.outputs.go_version }}
-      registry_name: ${{ steps.conf.outputs.registry_name }}
       image_name: ${{ steps.conf.outputs.image_name }}
     steps:
     - name: Export Config
       id: conf
       run: |
-        echo "builder_version=${{ env.BUILDER_VERSION }}" >> $GITHUB_OUTPUT
         echo "cosign_version=${{ env.COSIGN_VERSION }}" >> $GITHUB_OUTPUT
         echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
         echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
-        echo "registry_name=${{ env.REG_NAME }}" >> $GITHUB_OUTPUT
         echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
 
   test:
@@ -64,7 +56,6 @@ jobs:
     uses: ./.github/workflows/build.yaml
     with:
       go_version: ${{ needs.conf.outputs.go_version }}
-      registry_name: ${{ needs.conf.outputs.registry_name }}
       image_name: ${{ needs.conf.outputs.image_name }}
 
   sign:
