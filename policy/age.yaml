@@ -1,0 +1,28 @@
+# Based on example from https://github.com/chainguard-dev/policy-catalog
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: sbom-attestation-image-policy
+spec:
+  images:
+  - glob: ghcr.io/mchmarny/**
+  authorities:
+  - static:
+      action: pass
+  mode: enforce
+  policy:
+    fetchConfigFile: true
+    type: "rego"
+    data: |
+      package sigstore
+
+      nanos_day = 86400000000000
+      max_age = 7 * nanos_day
+
+      isCompliant[response] {
+        created := time.parse_rfc3339_ns(input.config[_].created)
+        response := {
+          "result" : time.now_ns() < created + max_age,
+          "error" : "Image exceeds maximum allowed age."
+        }
+      }
