@@ -11,7 +11,7 @@ on:
         description: 'The version of cosign to use'
         required: false
         type: string
-        default: 'v1.13.1'
+        default: 'v2.0.1'
       scan_severity:
         description: 'Error on vulnerability scan severity'
         required: false
@@ -67,7 +67,6 @@ jobs:
 
     - name: Sign Image
       env:
-        COSIGN_EXPERIMENTAL: true
         COSIGN_YES: true
       run: |
         cosign sign ${{ inputs.image_digest }} \
@@ -79,8 +78,6 @@ jobs:
             -a tag=${{ env.GITHUB_REF_NAME }}
 
     - name: Attest Signature
-      env:
-        COSIGN_EXPERIMENTAL: true
       run: |
         cosign verify --key cosign.pub ${{ inputs.image_digest }}
 

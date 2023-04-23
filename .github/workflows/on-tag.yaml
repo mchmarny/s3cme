@@ -17,7 +17,7 @@ jobs:
 
       # Defaults
       BUILDER_VERSION: v1.4.0
-      COSIGN_VERSION: v1.13.1
+      COSIGN_VERSION: v2.0.1
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
       GO_VERSION: '1.20.3'
 
