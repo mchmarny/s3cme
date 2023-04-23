@@ -2,10 +2,10 @@ name: code_analyze
 on:
   push:
     branches:
-    - main
+    - gcp
   pull_request:
     branches:
-    - main
+    - gcp
   schedule:
     - cron: '15 */4 * * *'
 permissions:

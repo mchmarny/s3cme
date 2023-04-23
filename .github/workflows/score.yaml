@@ -4,7 +4,7 @@ on:
     - cron: '15 */3 * * 2'
   push:
     branches:
-    - main
+    - gcp
 permissions: read-all
 jobs:
   score:

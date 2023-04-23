@@ -3,10 +3,10 @@ name: on_push
 on:
   push:
     branches:
-      - main
+      - gcp
   pull_request:
     branches:
-      - main
+      - gcp
 
 permissions:
   contents: read
