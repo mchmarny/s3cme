@@ -88,8 +88,14 @@ jobs:
       env:
         COSIGN_YES: true
       run: |
-        cosign download sbom --output-file sbom.json ${{ inputs.image_digest }}
-        cosign attest --type spdxjson --predicate sbom.json ${{ inputs.image_digest }}
+        cosign download sbom \
+          --output-file sbom.json \
+          ${{ inputs.image_digest }}
+        cosign attest \
+          --key cosign.key \
+          --type spdxjson \
+          --predicate sbom.json \
+          ${{ inputs.image_digest }}
 
     - name: Verify Attest
       env:
