@@ -88,14 +88,15 @@ jobs:
       env:
         COSIGN_YES: true
       run: |
-        cosign download sbom ${{ inputs.image_digest }} --output-file bom.spdx.json
-        cosign attest --timeout=0 --type spdxjson --predicate bom.spdx.json ${{ inputs.image_digest }}
+        cosign download sbom --output-file sbom.json ${{ inputs.image_digest }}
+        cosign attest --type spdxjson --predicate sbom.json ${{ inputs.image_digest }}
 
     - name: Verify Attest
       env:
         COSIGN_YES: true
       run: |
-        cosign verify-attestation --type spdxjson \
+        cosign verify-attestation \
+          --type spdxjson \
           --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
           --certificate-identity-regexp "^https://github.com/mchmarny/s3cme/.github/workflows/on-tag.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$" \
           ${{ inputs.image_digest }}
