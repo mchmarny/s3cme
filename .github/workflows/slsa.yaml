@@ -7,14 +7,6 @@ on:
         description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
         required: true
         type: string
-      auth_provider:
-        description: 'OIDC provider ID'
-        required: true
-        type: string
-      auth_user:
-        description: 'OIDC user ID'
-        required: true
-        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
@@ -45,15 +37,14 @@ jobs:
     - conf
     permissions:
       actions: read
-      id-token: write
       packages: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
     with:
       image: ${{ needs.conf.outputs.image }}
       digest: ${{ needs.conf.outputs.digest }}
       registry-username: ${{ github.actor }}
-      gcp-workload-identity-provider: ${{ inputs.auth_provider }}
-      gcp-service-account: ${{ inputs.auth_user }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
 
   verify:
     needs:
@@ -67,14 +58,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
 
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@e8df18b60c5dd38ba618c121b779307266153fbf  # v1.1.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ inputs.auth_provider }}
-        service_account: ${{ inputs.auth_user }}
-
     - name: Install Cosign
       uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919  # v3.0.2
       with:
@@ -82,17 +65,13 @@ jobs:
 
     - name: Auth Cosign
       run: |
-        set -euo pipefail
-        cosign version
-        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
-        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
     # SLSA provenance verification using cosign and CUE policy.
     - name: Verify SLSA Provenance (cosign)
       env:
         COSIGN_EXPERIMENTAL: 1
       run: |
-        set -euo pipefail
         cosign verify-attestation \
           --type slsaprovenance \
           --policy policy/provenance.cue \
@@ -103,8 +82,6 @@ jobs:
     # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance (slsa-verifier)
       run: |-
-        set -euo pipefail
-        slsa-verifier version
         slsa-verifier verify-image ${{ inputs.image_digest }} \
           --source-uri "github.com/$GITHUB_REPOSITORY" \
           --source-tag "$GITHUB_REF_NAME"

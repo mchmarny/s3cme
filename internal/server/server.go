@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -10,13 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	server "github.com/mchmarny/s3cme/cmd/server/v1"
+	"github.com/mchmarny/s3cme/internal/handler"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 const (
-	serviceName    = "demo"
 	addressDefault = ":8080"
 	logLevelEnvVar = "LOG_LEVEL"
 
@@ -26,28 +25,30 @@ const (
 )
 
 var (
-	// Set at build time.
-	version = "v0.0.1-default"
-
 	contextKey key
 )
 
 type key int
 
-type APIHandler interface {
-	RootHandler(w http.ResponseWriter, r *http.Request)
-}
+// Run starts the server with a given name and version.
+func Run(name, version string) {
+	level, ok := os.LookupEnv(logLevelEnvVar)
+	if !ok {
+		level = "info"
+	}
 
-func main() {
-	initLogging()
-	log.Info().Str("service", serviceName).Msg("starting server")
+	initLogging(name, version, level)
+	log.Info().Str("name", name).Msg("starting server")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "nothing to see here, try: /api/v1\n")
 	})
 
-	h := &server.APIHandler{Version: version}
+	h := &handler.Handler{
+		Name:    name,
+		Version: version,
+	}
 
 	mux.HandleFunc("/api/v1", h.RootHandler)
 
@@ -56,9 +57,7 @@ func main() {
 		address = fmt.Sprintf(":%s", val)
 	}
 
-	ctx := context.Background()
-
-	run(ctx, mux, address)
+	run(context.Background(), mux, address)
 }
 
 // run starts the server and waits for termination signal.
@@ -97,19 +96,19 @@ func run(ctx context.Context, mux *http.ServeMux, address string) {
 	}
 }
 
-func initLogging() {
+func initLogging(name, version, level string) {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	lev, ok := os.LookupEnv(logLevelEnvVar)
-	if ok {
-		lvl, err := zerolog.ParseLevel(lev)
-		if err != nil {
-			log.Warn().Err(err).Msgf("error parsing log level: %s", lev)
-		} else {
-			zerolog.SetGlobalLevel(lvl)
-		}
+	lvl, err := zerolog.ParseLevel(level)
+	if err != nil {
+		log.Warn().Err(err).Msgf("error parsing log level: %s", level)
+	} else {
+		zerolog.SetGlobalLevel(lvl)
 	}
 
-	log.Logger = zerolog.New(os.Stdout).With().Str("version", version).Logger()
+	log.Logger = zerolog.New(os.Stdout).With().
+		Str("name", name).
+		Str("version", version).
+		Logger()
 }

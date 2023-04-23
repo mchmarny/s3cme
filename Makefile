@@ -23,7 +23,7 @@ test: tidy ## Runs unit tests
 	go test -count=1 -race -covermode=atomic -coverprofile=cover.out ./...
 
 .PHONY: lint
-lint: lint-go lint-yaml lint-tf ## Lints the entire project 
+lint: lint-go lint-yaml ## Lints the entire project 
 	@echo "Completed Go and YAML lints"
 
 .PHONY: lint
@@ -34,18 +34,13 @@ lint-go: ## Lints the entire project using go
 lint-yaml: ## Runs yamllint on all yaml files (brew install yamllint)
 	yamllint -c .yamllint $(YAML_FILES)
 
-.PHONY: lint-tf
-lint-tf: ## Runs terraform fmt on all terraform files
-	terraform -chdir=./setup fmt
-	terraform -chdir=./deploy fmt
-
 .PHONY: build
 build: tidy ## Builds CLI binary
 	mkdir -p ./bin
 	CGO_ENABLED=0 go build -trimpath \
 	-ldflags="-w -s -X main.version=$(RELEASE_VERSION) \
 	-extldflags '-static'" -mod vendor \
-	-o bin/server cmd/server/main.go
+	-o bin/server internal/cmd/main.go
 
 .PHONY: vulncheck
 vulncheck: ## Checks for soource vulnerabilities
@@ -53,7 +48,7 @@ vulncheck: ## Checks for soource vulnerabilities
 
 .PHONY: server
 server: ## Runs uncompiled app 
-	LOG_LEVEL=debug go run cmd/server/main.go
+	LOG_LEVEL=debug go run internal/cmd/main.go
 
 .PHONY: tag
 tag: ## Creates release tag 
@@ -64,15 +59,6 @@ tag: ## Creates release tag
 tagless: ## Delete the current release tag 
 	git tag -d $(VERSION)
 	git push --delete origin $(VERSION)
-
-.PHONY: setup
-setup: ## Creates the GCP resources 
-	terraform -chdir=./setup init
-	terraform -chdir=./setup apply -auto-approve
-
-.PHONY: apply
-apply: ## Applies Terraform
-	terraform -chdir=./setup apply -auto-approve
 
 .PHONY: clean
 clean: ## Cleans bin and temp directories

@@ -7,14 +7,6 @@ on:
         description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
         required: true
         type: string
-      auth_provider:
-        description: 'OIDC provider ID'
-        required: true
-        type: string
-      auth_user:
-        description: 'OIDC user ID'
-        required: true
-        type: string
       cosign_version:
         description: 'The version of cosign to use'
         required: false
@@ -34,16 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      id-token: write
     steps:
-
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@e8df18b60c5dd38ba618c121b779307266153fbf  # v1.1.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ inputs.auth_provider }}
-        service_account: ${{ inputs.auth_user }}
 
     - name: Scan Image
       uses: aquasecurity/trivy-action@e5f43133f6e8736992c9f3c1b3296e24b37e17f2  # 0.10.0
@@ -57,8 +40,7 @@ jobs:
         hide-progress: true
         timeout: "10m"
         exit-code: "1"
-      env:
-        GOOGLE_APPLICATION_CREDENTIAL: ${{ steps.auth.outputs.access_token }}
+        github-pat: ${{ secrets.GITHUB_TOKEN }}
 
   sign:
     needs:
@@ -69,14 +51,6 @@ jobs:
       id-token: write
     steps:
 
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@e8df18b60c5dd38ba618c121b779307266153fbf  # v1.1.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ inputs.auth_provider }}
-        service_account: ${{ inputs.auth_user }}
-
     - name: Install Cosign
       uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919  # v3.0.2
       with:
@@ -84,22 +58,18 @@ jobs:
 
     - name: Auth Cosign
       run: |
-        set -euo pipefail
-        cosign version
-        reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
-        cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
+        cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
     - name: Generate Keys
       run: |
-        set -euo pipefail
         COSIGN_PASSWORD=$(openssl rand -base64 12)
         cosign generate-key-pair
 
-    - name: Attest Image
+    - name: Sign Image
       env:
-        COSIGN_EXPERIMENTAL: "true"
+        COSIGN_EXPERIMENTAL: true
+        COSIGN_YES: true
       run: |
-        set -euo pipefail
         cosign sign ${{ inputs.image_digest }} \
             --force \
             --key cosign.key \
@@ -110,9 +80,6 @@ jobs:
 
     - name: Attest Image
       env:
-        COSIGN_EXPERIMENTAL: "true"
+        COSIGN_EXPERIMENTAL: true
       run: |
-        set -euo pipefail
-          cosign verify \
-          --key cosign.pub \
-          ${{ inputs.image_digest }}
+        cosign verify --key cosign.pub ${{ inputs.image_digest }}

@@ -3,33 +3,26 @@ name: build_image
 on:
   workflow_call:
     inputs:
-      image_repo:
-        description: 'Fully-qualified image repo (registry/project/repo)'
+      registry_name:
+        description: 'Registry URI (e.g. username portion of ghcr.io/username)'
         required: true
         type: string
       image_name:
         description: 'Image name (e.g. my-image)'
         required: true
         type: string
-      auth_provider:
-        description: 'OIDC provider ID'
-        required: true
-        type: string
-      auth_user:
-        description: 'OIDC user ID'
-        required: true
-        type: string
       go_version:
         description: 'Go version to use'
         required: false
         type: string
-        default: '1.20.2'
+        default: '1.20.3'
     outputs:
       digest:
         value: ${{ jobs.build.outputs.digest }}
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -38,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      id-token: write
+      packages: write
     steps:
 
     - name: Setup Go
@@ -66,39 +59,30 @@ jobs:
         go mod tidy
         go mod vendor
 
-    - id: auth
-      name: Auth GCP
-      uses: google-github-actions/auth@e8df18b60c5dd38ba618c121b779307266153fbf  # v1.1.0
-      with:
-        token_format: "access_token"
-        workload_identity_provider: ${{ inputs.auth_provider }}
-        service_account: ${{ inputs.auth_user }}
-
-    - name: Install ko
-      uses: ko-build/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
-
-    - name: Authenticate ko
-      env:
-        AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
-      run: |
-        set -euo pipefail
-        reg=$(echo ${{ inputs.image_repo }} | cut -d/ -f1)
-        echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
-
     - name: Get Version
       run: |
         set -euo pipefail
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
+    - name: Install ko
+      uses: ko-build/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
+
+    - name: Authenticate ko
+      run: |
+        ko login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+
     # Note: ko build image ref will include BOTH, the tag AND digest of the image.
-    # ThTechnically not well formed but most of the tools seem to parse it as digest.
     - name: Build Image
       id: image
       env:
-        KO_DOCKER_REPO: ${{ inputs.image_repo }}/${{ inputs.image_name }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        KO_DOCKER_REPO: ghcr.io/${{ inputs.registry_name }}/${{ inputs.image_name }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |
         set -euo pipefail
-        ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
+        ko build internal/cmd/main.go \
+          --image-refs .digest \
+          --bare \
+          --tags ${{ env.RELEASE_VERSION }},latest
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"

@@ -1,4 +1,4 @@
-package v1
+package handler
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestRootHandler(t *testing.T) {
-	s := &APIHandler{
+	s := &Handler{
 		Version: "1.0.0",
 	}
 
@@ -24,11 +24,11 @@ func TestRootHandler(t *testing.T) {
 	status := rr.Code
 	assert.Equal(t, http.StatusOK, status)
 
-	var c APIResponse
-	err = json.NewDecoder(rr.Body).Decode(&c)
+	var r APIResponse
+	err = json.NewDecoder(rr.Body).Decode(&r)
 	assert.NoError(t, err)
-	assert.Equal(t, s.Version, c.Version)
-	assert.NotEmpty(t, c.Message)
-	assert.NotEmpty(t, c.Timestamp)
-	assert.Empty(t, c.Error)
+	assert.Equal(t, s.Version, r.Version)
+	assert.NotEmpty(t, r.Message)
+	assert.NotEmpty(t, r.Timestamp)
+	assert.Empty(t, r.Error)
 }
