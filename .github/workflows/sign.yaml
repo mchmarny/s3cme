@@ -80,26 +80,8 @@ jobs:
       run: |
         cosign verify --key cosign.pub ${{ inputs.image_digest }}
 
-    - name: Attest SBOM
+    - name: Verify SBOM
       env:
         COSIGN_YES: true
       run: |
-        cosign download sbom \
-          --output-file sbom.json \
-          ${{ inputs.image_digest }}
-        cosign attest \
-          --key cosign.key \
-          --type spdxjson \
-          --predicate sbom.json \
-          ${{ inputs.image_digest }}
-
-    - name: Verify Attest
-      env:
-        COSIGN_YES: true
-      run: |
-        cosign verify-attestation \
-          --key cosign.pub \
-          --type spdxjson \
-          --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-          --certificate-identity-regexp "^https://github.com/mchmarny/s3cme/.github/workflows/on-tag.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$" \
-          ${{ inputs.image_digest }}
+        cosign verify --key cosign.pub --attachment sbom ${{ inputs.image_digest }}
