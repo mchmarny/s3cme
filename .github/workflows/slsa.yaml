@@ -76,7 +76,7 @@ jobs:
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
           --policy policy/provenance.cue \
           ${{ inputs.image_digest }}
-          
+
     - uses: slsa-framework/slsa-verifier/actions/installer@623cf20a23f3360549eafac6efe1a158960f15f9  # v2.2.0
 
     # SLSA provenance verification using slsa-verifier.
