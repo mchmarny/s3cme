@@ -74,6 +74,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: write
     uses: ./.github/workflows/sign.yaml
     with:
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
