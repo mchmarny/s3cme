@@ -1,0 +1,38 @@
+name: scan
+
+on:
+  workflow_call:
+    inputs:
+      image_digest:
+        description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
+        required: true
+        type: string
+      scan_severity:
+        description: 'Error on vulnerability scan severity'
+        required: false
+        type: string
+        default: 'CRITICAL,HIGH,MEDIUM'
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+
+    - name: Scan Image
+      uses: aquasecurity/trivy-action@e5f43133f6e8736992c9f3c1b3296e24b37e17f2  # 0.10.0
+      with:
+        scan-type: image
+        security-checks: vuln
+        severity: ${{ inputs.scan_severity }}
+        image-ref: ${{ inputs.image_digest }}
+        github-pat: ${{ secrets.GITHUB_TOKEN }}
+        format: sarif
+        output: trivy-results.sarif
+        hide-progress: true
+        timeout: "10m"
+        exit-code: "1"

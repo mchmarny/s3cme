@@ -15,24 +15,24 @@ jobs:
       IMG_NAME: s3cme
       GO_VERSION: '1.20.3'
       COSIGN_VERSION: v2.0.1
-      ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
+      ERR_VULNERABILITY_SEV: 'CRITICAL,HIGH,MEDIUM'
 
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
+      image_name: ${{ steps.conf.outputs.image_name }}
+      go_version: ${{ steps.conf.outputs.go_version }}
       cosign_version: ${{ steps.conf.outputs.cosign_version }}
       err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
-      go_version: ${{ steps.conf.outputs.go_version }}
-      image_name: ${{ steps.conf.outputs.image_name }}
     steps:
     - name: Export Config
       id: conf
       run: |
+        echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
+        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
         echo "cosign_version=${{ env.COSIGN_VERSION }}" >> $GITHUB_OUTPUT
         echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
-        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
-        echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
 
   test:
     needs:
@@ -69,6 +69,17 @@ jobs:
     uses: ./.github/workflows/sign.yaml
     with:
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
+      image_digest: ${{ needs.build.outputs.digest }}
+
+  scan:
+    needs:
+    - conf
+    - build
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/scan.yaml
+    with:
       image_digest: ${{ needs.build.outputs.digest }}
       scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
