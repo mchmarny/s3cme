@@ -199,7 +199,7 @@ policy:
 When finished, apply the policy into the cluster:
 
 ```shell
-kubectl apply -f policy/cluster.yaml
+kubectl apply -f policy/slsa.yaml
 ```
 
 To verify SLSA provenance on any namespace in your cluster, add a sigstore inclusion label to that namespace (e.g. `demo`):

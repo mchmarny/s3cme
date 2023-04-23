@@ -1,0 +1,20 @@
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: sbom-attestation-image-policy
+spec:
+  images:
+  - glob: ghcr.io/mchmarny/**
+  authorities:
+  - keyless:
+      url: https://fulcio.sigstore.dev
+      identities:
+      - issuer: "https://token.actions.githubusercontent.com"
+        subjectRegExp: "^https://github.com/mchmarny/s3cme/.github/workflows/on-tag.yaml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    attestations:
+    - name: must-have-spdx-sbom
+      predicateType: https://spdx.dev/Document
+      policy:
+        type: cue
+        data: |
+          predicateType: "https://spdx.dev/Document"
