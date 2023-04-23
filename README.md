@@ -78,13 +78,15 @@ Navigate to `/actions` in your repo to see the status of that release pipeline. 
 
 When successfully completed, that pipeline will create an image. Navigate to the registry to confirm the image was created.
 
-https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION
+> This link will take you to the original template registry. Replace username and repo to navigate to yours.
+
+https://github.com/mchmarny/s3cme/pkgs/container/s3cme
 
 ![](images/registry.png)
 
-The image is the line item tagged with version (e.g. `v0.4.0`). The other two OCI artifacts named with the image digest in the registry are signature (`.sig`) and attestation (`.att`).
+The image is the line item tagged with version (e.g. `latest`). The other two OCI artifacts named with the image digest in the registry are the signature (`.sig`), and attestations (`.att`).
 
-You can now take the image digest and query sigstore transparency service (Rekor). Easiest way to do that is to use the Chainguard's [rekor-search-ui](https://github.com/chainguard-dev/rekor-search-ui). Here is the entry for [s3cme v0.4.4](https://rekor.tlog.dev/?hash=sha256:0e07d5c7ec2caaf2643c0e3604687b5a826c4e5a51bc8a26d99edb0979380d7d).
+You can now take the image digest and query sigstore transparency service (Rekor). Easiest way to do that is to use the Chainguard's [rekor-search-ui](https://github.com/chainguard-dev/rekor-search-ui). Here is the entry for [s3cme v0.6.35](https://search.sigstore.dev/?hash=sha256:c85cdbb4cff81cd12f12af9cc7da4929f1b653a55896501e18755674739403fa).
 
 ## Provenance Verification  
 
@@ -100,7 +102,7 @@ cosign verify-attestation \
    --certificate-identity-regexp "^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$" \
    --certificate-oidc-issuer https://token.actions.githubusercontent.com \
    --policy policy/provenance.cue \
-   $IMAGE
+   $digest
 ```
 
 The terminal output will include the checks that were executed as part of the validation, as well as information about the subject (URI of the tag ref that triggered that workflow), with its SHA, name, and Ref.
@@ -110,13 +112,13 @@ The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - The code-signing certificate was verified using trusted certificate authority certificates
-Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.5.0
-Certificate issuer URL:  https://token.actions.githubusercontent.com
+Certificate subject: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.5.0
+Certificate issuer URL: https://token.actions.githubusercontent.com
 GitHub Workflow Trigger: push
-GitHub Workflow SHA: 654000662f166b4621ba7dd705568b9a743b6d45
+GitHub Workflow SHA: 5ed1e3b75214316fd5cd09e77b88f41c01ea85ec
 GitHub Workflow Name: on_tag
-GitHub Workflow Trigger mchmarny/s3cme
-GitHub Workflow Ref: refs/tags/v0.6.21
+GitHub Workflow Repository: mchmarny/s3cme
+GitHub Workflow Ref: refs/tags/v0.6.35
 ```
 
 The output will also include JSON, which looks something like this (`payload` abbreviated): 
@@ -147,9 +149,9 @@ Returns:
     "predicateType": "https://slsa.dev/provenance/v0.2",
     "subject": [
         {
-            "name": "us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme",
+            "name": "ghcr.io/mchmarny/s3cme",
             "digest": {
-                "sha256": "22080f8082e60e7f3ab745818e59c6f513464de23b53bbd28dc83c4936c27cbc"
+                "sha256": "c85cdbb4cff81cd12f12af9cc7da4929f1b653a55896501e18755674739403fa"
             }
         }
     ],
@@ -161,13 +163,13 @@ Returns:
 
 You can also verify the provenance of an image in your Kubernetes cluster.
 
-> This assumes you already configured the sigstore admission controller in your Kubernetes cluster. If not, you can use the provided [tools/demo-cluster](tools/demo-cluster) script to create a cluster and configure sigstore policy-controller.
+> This assumes you already configured the sigstore admission controller in your Kubernetes cluster. If not, you can use the provided [tools/gke-cluster](tools/gke-cluster) script to create a cluster and configure sigstore policy-controller.
 
 First, review the [policy/cluster.yaml](policy/cluster.yaml) file, and make sure the glob pattern matches your Artifact Registry (`**` will match any character). You can make this as specific as you want (e.g. any image in the project in specific region)
 
 ```yaml
 images:
-- glob: us-west1-docker.pkg.dev/cloudy-s3c/**
+- glob: ghcr.io/mchmarny/**
 ```
 
 Next, check the subject portion of the issuer identity (in this case, the SLSA workflow with the repo tag)
@@ -216,10 +218,10 @@ validation failed: no matching policies: spec.containers[0].image
 index.docker.io/nginxdemos/hello@sha256:409564c3a1d1...
 ```
 
-That policy failed because the image URI doesn't match the images glob we've specified (`glob: us-west1-docker.pkg.dev/cloudy-s3c/s3cme/**`). How about if we try to deploy image that does:
+That policy failed because the image URI doesn't match the images glob we've specified (`glob: ghcr.io/mchmarny/**`). How about if we try to deploy image that does:
 
 ```shell
-kubectl run test -n demo --image us-west1-docker.pkg.dev/cloudy-s3c/s3cme/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d
+kubectl run test -n demo --image ghcr.io/mchmarny/s3cme@sha256:ead1a5b3e83760e304ee449732feaa4a80c76c2c098dccb56e3d3b8926b5509d
 ```
 
 Now the failure is on the SLSA policy due to lack of verifiable attestations:
@@ -233,10 +235,6 @@ no matching attestations:
 ```
 
 This demonstrates how the policy-controller admission controller enforces [SLSA provenance](https://slsa.dev/provenance/v0.2) policy in your cluster based on verifiable supply-chain metadata from [cosign](https://github.com/sigstore/cosign).
-
-## Deployment 
-
-Automation to bootstrap `s3cme` as a fully functional, multi-region, deployment on GCP are located in [deploy/README.md](deploy/README.md).
 
 ## Disclaimer
 

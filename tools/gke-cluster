@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+set -eo pipefail
 
 # validation 
 gcloud=$(which gcloud)   || ( echo "gcloud not found" && exit 1 )
@@ -22,7 +22,7 @@ if [[ -z "${ACCOUNT}" ]]; then
 fi;
 
 # cluster variables
-export CLUSTER_NAME="s3c"
+export CLUSTER_NAME="s3cme"
 export CLUSTER_NODE_MACHINE_TYPE="e2-medium"
 export CLUSTER_RELEASE_CHANNEL="rapid"
 export CLUSTER_SIZE="3"
@@ -42,7 +42,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
     --enable-autoupgrade \
     --enable-autorepair \
     --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver \
-    --labels "demo=s3c,env=dev"
+    --labels "demo=s3cme,env=dev"
 
 # cluster status
 gcloud container clusters list \
