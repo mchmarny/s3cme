@@ -70,7 +70,6 @@ jobs:
         COSIGN_YES: true
       run: |
         cosign sign ${{ inputs.image_digest }} \
-            --force \
             --key cosign.key \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
