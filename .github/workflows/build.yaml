@@ -76,7 +76,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         KO_DOCKER_REPO: ghcr.io/${{ inputs.registry_name }}/${{ inputs.image_name }}
         GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
-        COSIGN_EXPERIMENTAL: "true"
+        COSIGN_EXPERIMENTAL: true
       run: |
         set -euo pipefail
         ko build internal/cmd/main.go \
