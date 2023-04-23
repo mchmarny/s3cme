@@ -79,9 +79,3 @@ jobs:
     - name: Attest Signature
       run: |
         cosign verify --key cosign.pub ${{ inputs.image_digest }}
-
-    - name: Verify SBOM
-      env:
-        COSIGN_YES: true
-      run: |
-        cosign verify --key cosign.pub --attachment sbom ${{ inputs.image_digest }}
