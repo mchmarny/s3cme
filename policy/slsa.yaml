@@ -3,14 +3,17 @@ kind: ClusterImagePolicy
 metadata:
   name: slsa-attestation-image-policy
 spec:
+
   images:
   - glob: ghcr.io/mchmarny/**
+
   authorities:
   - keyless:
       url: https://fulcio.sigstore.dev
       identities:
       - issuer: https://token.actions.githubusercontent.com
         subjectRegExp: "^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+
     attestations:
     - name: must-have-slsa
       predicateType: https://slsa.dev/provenance/v0.2
