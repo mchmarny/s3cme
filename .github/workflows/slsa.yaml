@@ -59,7 +59,7 @@ jobs:
       uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
 
     - name: Install Cosign
-      uses: sigstore/cosign-installer@204a51a57a74d190b284a0ce69b44bc37201f343  # v3.0.3
+      uses: sigstore/cosign-installer@dd6b2e2b610a11fd73dd187a43d57cc1394e35f9  # v3.0.5
       with:
         cosign-release: ${{ inputs.cosign_version }}
 
@@ -77,7 +77,7 @@ jobs:
           --policy policy/provenance.cue \
           ${{ inputs.image_digest }}
 
-    - uses: slsa-framework/slsa-verifier/actions/installer@623cf20a23f3360549eafac6efe1a158960f15f9  # v2.2.0
+    - uses: slsa-framework/slsa-verifier/actions/installer@c9abffe4d2ab2ffa0b2ea9b2582b84164f390adc  # v2.3.0
 
     # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance (slsa-verifier)
