@@ -39,7 +39,7 @@ jobs:
       actions: read
       packages: write
       id-token: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.6.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.7.0
     with:
       image: ${{ needs.conf.outputs.image }}
       digest: ${{ needs.conf.outputs.digest }}
