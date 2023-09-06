@@ -29,7 +29,7 @@ jobs:
       security-events: write
     steps:
     - name: Setup Go
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753  # v4.0.1
+      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe  # v4.1.0
       with:
         go-version: '${{ inputs.go_version }}'
     - run: go version
@@ -43,7 +43,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Checkout Code
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3.4.0
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac  # v3.4.0
     - name: Tidy Modules
       run: |
         make tidy
@@ -61,7 +61,7 @@ jobs:
       security-events: write
     steps:
     - name: Setup Go
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753  # v4.0.1
+      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe  # v4.1.0
       with:
         go-version: '${{ inputs.go_version }}'
     - run: go version
@@ -75,7 +75,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Checkout Code
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3.4.0
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac  # v3.4.0
     - name: Tidy Modules
       run: |
         make tidy
@@ -86,7 +86,7 @@ jobs:
         files: .golangci.yaml
     - name: Lint Go
       if: steps.golangci_config.outputs.files_exists == 'true'
-      uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299  # v3.6.0
+      uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc  # v3.7.0
       with:
         version: ${{ inputs.golangci_version }}
     - name: Config YAML Lint
@@ -106,7 +106,7 @@ jobs:
       security-events: write
     steps:
     - name: Checkout Code
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3.4.0
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac  # v3.4.0
     - name: Scan Repo
       uses: aquasecurity/trivy-action@41f05d9ecffa2ed3f1580af306000f734b733e54  # master
       with:
