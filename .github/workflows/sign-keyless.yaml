@@ -1,0 +1,40 @@
+name: sign-keyless
+on:
+  workflow_call:
+    inputs:
+      image_digest:
+        description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
+        required: true
+        type: string
+      cosign_version:
+        description: 'The version of cosign to use'
+        required: false
+        type: string
+        default: 'v2.0.1'
+jobs:
+  sign-keyless:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      packages: write
+      id-token: write # Needed for OIDC and keyless signing
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.1.1
+        with:
+          cosign-release: ${{ inputs.cosign_version }}
+      - name: Check Cosign
+        run: |
+          cosign version
+      - name: Auth Cosign
+        run: |
+          cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+      - name: Sign Image keyless
+        env:
+          COSIGN_YES: true
+        run: |
+          cosign sign ${{ inputs.image_digest }} \
+              -a sha=${{ github.sha }} \
+              -a run_id=${{ github.run_id }} \
+              -a run_attempt=${{ github.run_attempt }} \
+              -a tag=${{ env.GITHUB_REF_NAME }}
