@@ -77,7 +77,7 @@ jobs:
           --policy policy/provenance.cue \
           ${{ inputs.image_digest }}
 
-    - uses: slsa-framework/slsa-verifier/actions/installer@73d1bcba982de0f644baec83df839399d13f472e  # v2.4.0
+    - uses: slsa-framework/slsa-verifier/actions/installer@7e1e47d7d793930ab0082c15c2b971fdb53a3c95  # v2.4.1
 
     # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance (slsa-verifier)
