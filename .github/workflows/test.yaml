@@ -34,7 +34,7 @@ jobs:
         go-version: '${{ inputs.go_version }}'
     - run: go version
     - name: Cache Go Modules
-      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84  # v3.3.2
+      uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2  # v4.0.0
       with:
         path: |
           ~/go/pkg/mod
@@ -66,7 +66,7 @@ jobs:
         go-version: '${{ inputs.go_version }}'
     - run: go version
     - name: Cache Go Modules
-      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84  # v3.3.2
+      uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2  # v4.0.0
       with:
         path: |
           ~/go/pkg/mod
@@ -108,7 +108,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v3.4.0
     - name: Scan Repo
-      uses: aquasecurity/trivy-action@2b6a709cf9c4025c5438138008beaddbb02086f0  # master
+      uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca  # master
       with:
         scan-type: 'fs'
         ignore-unfixed: true
