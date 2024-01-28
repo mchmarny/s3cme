@@ -7,7 +7,7 @@ on:
         description: 'Go version to use'
         required: false
         type: string
-        default: '1.20.3'
+        default: '1.21.6'
       scan_severity:
         description: 'Trivy scan severity'
         required: false

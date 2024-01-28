@@ -17,10 +17,10 @@ jobs:
     permissions:
       actions: read
       packages: write
-      id-token: write # Needed for OIDC and keyless signing
+      id-token: write  # Needed for OIDC and keyless signing
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149 # v3.3.0
+        uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149  # v3.3.0
         with:
           cosign-release: ${{ inputs.cosign_version }}
       - name: Check Cosign
