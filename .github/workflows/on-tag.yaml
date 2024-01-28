@@ -13,7 +13,7 @@ jobs:
     env:
       # Update as needed
       IMG_NAME: s3cme
-      GO_VERSION: '1.20.3'
+      GO_VERSION: '1.21.6'
       COSIGN_VERSION: v2.2.2
       ERR_VULNERABILITY_SEV: 'CRITICAL,HIGH,MEDIUM'
 
