@@ -2,7 +2,7 @@
 
 Sample Go app repo with test and release pipelines optimized for software supply chain security (S3C).
 
-![](images/workflow.png)
+![](images/workflow-tag.png)
 
 * [Repo Usage](#usage)
 * [Provenance Verification](#provenance-verification)
